@@ -14,6 +14,12 @@ describe("white sheet planning", function() {
         , "id": uuid.v1()
       }
 
+    , dockDef = {
+          "name": "doc-srv"
+        , "type": "docker"
+        , "id": uuid.v1()
+      }
+
     , origin = {
           "name": "white sheet"
         , "namespace": "white sheet"
@@ -24,14 +30,22 @@ describe("white sheet planning", function() {
           }
       }
 
-  function defineMachine(definition) {
-    return {
+  function defineMachine(definition, containedBy) {
+    var result = {
         "id": uuid.v1()
       , "containerDefinitionId": amiDefinition.id
+      , "containedBy": (containedBy || {}).id
+      , "contains": []
       , "specific": {
             "ipaddress": "10.74.143.152"
         }
-    };
+    }
+
+    if (containedBy) {
+      containedBy.contains.push(result.id)
+    }
+
+    return result
   }
 
   it("should create a plan that starts a machine", function() {
@@ -107,6 +121,50 @@ describe("white sheet planning", function() {
    }, {
        cmd: "link"
      , id: machine2.id
+   }])
+  })
+
+  it("should create a plan that starts two machines, one contained in the other", function() {
+
+    var machine1 = defineMachine(amiDefinition)
+
+      , machine2 = defineMachine(dockDef, machine1)
+
+      , dest = {
+            "name": "single instance"
+          , "namespace": "single instance"
+          , "id": uuid.v1()
+          , "containerdefinitions": [ amiDefinition ]
+          , "topology": {
+                "containers": {}
+            }
+        }
+
+      , plan
+
+   dest.topology.containers[machine1.id] = machine1
+   dest.topology.containers[machine2.id] = machine2
+
+   plan = planner(origin, dest)
+
+   expect(plan).to.eql([{
+       cmd: "add"
+     , id: machine1.id
+   }, {
+       cmd: "start"
+     , id: machine1.id
+   }, {
+       cmd: "add"
+     , id: machine2.id
+   }, {
+       cmd: "start"
+     , id: machine2.id
+   }, {
+       cmd: "link"
+     , id: machine2.id
+   }, {
+       cmd: "link"
+     , id: machine1.id
    }])
   })
 })

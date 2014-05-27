@@ -25,7 +25,9 @@ function planner(origin, dest)  {
 
   return cmds.reduce(function(acc, cmd) {
     return acc.concat(tasks.plan(state, cmd))
-  }, [])
+  }, []).filter(function(cmd) {
+    return cmd.cmd !== 'nop'
+  })
 }
 
 function generateCommands(origin, dest) {
@@ -61,46 +63,71 @@ function generateTasks(dest) {
 
   var planner = new TaskPlanner()
 
+  planner.addTask({ cmd: 'nop' }, {})
+
   _.forIn(dest.topology.containers, function(container) {
+
+    var addSubTask = {
+            cmd: 'add'
+          , id: container.id
+        }
+      , startSubTask = {
+            cmd: 'start'
+          , id: container.id
+        }
+      , linkSubTask = {
+            cmd: 'link'
+          , id: container.id
+        }
+      , configureOp = {
+            preconditions: containerStatus(container, 'detached')
+          , subTasks: [addSubTask, startSubTask, linkSubTask]
+        }
+      , addPreconditions = containerStatus(container, 'detached')
+      , linkPreconditions = containerStatus(container, 'started')
+
+    if (container.contained) {
+      configureOp.subTasks[0].parent = container.contained
+      addPreconditions = _.merge(addPreconditions, containerStatus(container.contained, 'running'))
+      configureOp.subTasks.unshift({
+          cmd: 'configure'
+        , id: container.contained
+      })
+    }
+
+    container.contains.forEach(function(contained) {
+      linkPreconditions = _.merge(linkPreconditions, containerStatus({ id: contained }, 'running'))
+      configureOp.subTasks.splice(2, 0, {
+          cmd: 'configure'
+        , id: contained
+      })
+    })
 
     planner.addTask({
         cmd: 'configure'
       , id: container.id
     }, {
-        preconditions: containerStatus(container, 'detached')
-      , subTasks: [{
-            cmd: 'add'  // TODO add parent detection
-          , id: container.id
-        }, {
-            cmd: 'start'
-          , id: container.id
-        }, {
-            cmd: 'link'
-          , id: container.id
-        }]
+        preconditions: containerStatus(container, 'running')
+      , subTasks: [{ cmd: 'nop' }]
     })
 
     planner.addTask({
-        cmd: 'add'
+        cmd: 'configure'
       , id: container.id
-    }, {
-        preconditions: containerStatus(container, 'detached')
+    }, configureOp)
+
+    planner.addTask(addSubTask, {
+        preconditions: addPreconditions
       , effects: containerStatus(container, 'added')
     })
 
-    planner.addTask({
-        cmd: 'start'
-      , id: container.id
-    }, {
+    planner.addTask(startSubTask, {
         preconditions: containerStatus(container, 'added')
       , effects: containerStatus(container, 'started')
     })
 
-    planner.addTask({
-        cmd: 'link'
-      , id: container.id
-    }, {
-        preconditions: containerStatus(container, 'started')
+    planner.addTask(linkSubTask, {
+        preconditions: linkPreconditions
       , effects: containerStatus(container, 'running')
     })
   })
