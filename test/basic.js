@@ -42,7 +42,7 @@ describe("white sheet planning", function() {
             "name": "single instance"
           , "namespace": "single instance"
           , "id": uuid.v1()
-          , "containerdefinitions": [ amidefinition ]
+          , "containerdefinitions": [ amiDefinition ]
           , "topology": {
                 "containers": {}
             }
@@ -63,6 +63,50 @@ describe("white sheet planning", function() {
    }, {
        cmd: "link"
      , id: machine.id
+   }])
+  })
+
+  it("should create a plan that starts two machines", function() {
+
+    var machine1 = defineMachine(amiDefinition)
+
+      , machine2 = defineMachine(amiDefinition)
+
+      , dest = {
+            "name": "single instance"
+          , "namespace": "single instance"
+          , "id": uuid.v1()
+          , "containerdefinitions": [ amiDefinition ]
+          , "topology": {
+                "containers": {}
+            }
+        }
+
+      , plan
+
+   dest.topology.containers[machine1.id] = machine1
+   dest.topology.containers[machine2.id] = machine2
+
+   plan = planner(origin, dest)
+
+   expect(plan).to.eql([{
+       cmd: "add"
+     , id: machine1.id
+   }, {
+       cmd: "start"
+     , id: machine1.id
+   }, {
+       cmd: "link"
+     , id: machine1.id
+   }, {
+       cmd: "add"
+     , id: machine2.id
+   }, {
+       cmd: "start"
+     , id: machine2.id
+   }, {
+       cmd: "link"
+     , id: machine2.id
    }])
   })
 })
