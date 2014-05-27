@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "uuid": "~1.4.1",
-    "taskplanner": "0.0.1",
+    "taskplanner": "0.0.2",
     "lodash": "~2.4.1"
   }
 }
