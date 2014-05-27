@@ -56,3 +56,5 @@ console.log(planner(origin, dest))
 
 ```
 
+See examples/whitesheet.js for an example with an ELB, an AMI and 2
+docker instances.
