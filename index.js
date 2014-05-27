@@ -31,6 +31,7 @@ function planner(origin, dest)  {
 }
 
 function generateCommands(origin, dest) {
+  // TODO add stopping/removing instances
   return _.chain(dest.topology.containers)
     .values()
     .map(function(container) {
