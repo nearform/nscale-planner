@@ -3,28 +3,16 @@ var planner = require("../")
   , expect  = require("must")
   , uuid    = require("uuid")
   , _       = require("lodash")
+  , fixture = require("./fixture")
 
 describe("dirty sheet planning", function() {
 
   var instance
 
-    , elbDefinition = {
-          "name": "Elastic Load Balancer"
-        , "type": "aws-elb"
-        , "id": uuid.v1()
-      }
-
-    , amiDefinition = {
-          "name": "Virtual Machine"
-        , "type": "aws-ami"
-        , "id": uuid.v1()
-      }
-
-    , dockDef = {
-          "name": "doc-srv"
-        , "type": "docker"
-        , "id": uuid.v1()
-      }
+    , elbDefinition = fixture.elbDefinition
+    , amiDefinition = fixture.amiDefinition
+    , dockDef       = fixture.dockerDefinition
+    , defineMachine = fixture.defineMachine
 
     , origin = {
           "name": "white sheet"
@@ -35,24 +23,6 @@ describe("dirty sheet planning", function() {
               "containers": {}
           }
       }
-
-  function defineMachine(definition, containedBy) {
-    var result = {
-        "id": uuid.v1()
-      , "containerDefinitionId": amiDefinition.id
-      , "containedBy": (containedBy || {}).id
-      , "contains": []
-      , "specific": {
-            "ipaddress": "10.74.143.152"
-        }
-    }
-
-    if (containedBy) {
-      containedBy.contains.push(result.id)
-    }
-
-    return result
-  }
 
   it("should create a plan that starts a machine, inside another", function() {
 
