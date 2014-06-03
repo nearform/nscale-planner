@@ -88,13 +88,15 @@ describe("dirty sheet planning", function() {
 
   it("should create a plan that stops an AMI with a Docker and starts two similar one", function() {
 
-    var machine1 = defineMachine(elbDefinition)
+    var machine1Origin  = defineMachine(elbDefinition)
 
-      , machine2 = defineMachine(amiDefinition, machine1)
+      , machine1Dest    = _.cloneDeep(machine1Origin)
+
+      , machine2 = defineMachine(amiDefinition, machine1Origin)
 
       , machine3 = defineMachine(dockDef, machine2)
 
-      , machine4 = defineMachine(amiDefinition, machine1)
+      , machine4 = defineMachine(amiDefinition, machine1Dest)
 
       , machine5 = defineMachine(dockDef, machine4)
 
@@ -104,11 +106,11 @@ describe("dirty sheet planning", function() {
 
       , plan
 
-   origin.topology.containers[machine1.id] = machine1
+   origin.topology.containers[machine1Origin.id] = machine1Origin
    origin.topology.containers[machine2.id] = machine2
    origin.topology.containers[machine3.id] = machine3
 
-   dest.topology.containers[machine1.id] = machine1
+   dest.topology.containers[machine1Dest.id] = machine1Dest
    dest.topology.containers[machine4.id] = machine4
    dest.topology.containers[machine5.id] = machine5
 

@@ -1,7 +1,7 @@
 nfd-planner
 ===========
 
-Plan your deployments, easily
+Plan your deployments, easily!
 
 ```js
 
@@ -57,4 +57,8 @@ console.log(planner(origin, dest))
 ```
 
 See examples/whitesheet.js for an example with an ELB, an AMI and 2
+docker instances.
+
+See examples/dirty.js for an example that spin up an AMI with a new
+docker instance within an ELB.
 docker instances.
