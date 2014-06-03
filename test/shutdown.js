@@ -44,4 +44,41 @@ describe("shutdown planning", function() {
    }])
   })
 
+  it("should create a plan that stops two machines, one inside another", function() {
+
+    var machine1 = defineMachine(amiDefinition)
+
+      , machine2 = defineMachine(dockDef, machine1)
+
+      , dest = buildSheet("basic container")
+
+      , currOrig = _.cloneDeep(origin)
+
+      , plan
+
+   currOrig.topology.containers[machine1.id] = machine1
+   currOrig.topology.containers[machine2.id] = machine2
+
+   plan = planner(currOrig, dest)
+
+   expect(plan).to.eql([{
+       cmd: "unlink"
+     , id: machine1.id
+   }, {
+       cmd: "unlink"
+     , id: machine2.id
+   }, {
+       cmd: "stop"
+     , id: machine2.id
+   }, {
+       cmd: "remove"
+     , id: machine2.id
+   }, {
+       cmd: "stop"
+     , id: machine1.id
+   }, {
+       cmd: "remove"
+     , id: machine1.id
+   }])
+  })
 })

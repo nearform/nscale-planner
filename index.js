@@ -106,7 +106,6 @@ function generateDestTasks(planner, dest) {
       , linkPreconditions = containerStatus(container, 'started')
 
     if (container.contained) {
-      configureOp.subTasks[0].parent = container.contained
       addPreconditions = _.merge(addPreconditions, containerStatus(container.contained, 'running'))
       configureOp.subTasks.unshift({
           cmd: 'configure'
@@ -176,22 +175,21 @@ function generateOriginTasks(planner, origin) {
       , stopPrecondition = containerStatus(container, 'started')
       , removePrecondition = containerStatus(container, 'added')
 
-    //if (container.contained) {
-    //  configureOp.subTasks[0].parent = container.contained
-    //  addPreconditions = _.merge(addPreconditions, containerStatus(container.contained, 'running'))
-    //  configureOp.subTasks.unshift({
-    //      cmd: 'configure'
-    //    , id: container.contained
-    //  })
-    //}
+    if (container.contained) {
+      unlinkPreconditions = _.merge(unlinkPreconditions, containerStatus(container.contained, 'started'))
+      detachOp.subTasks.splice(1, 0, {
+          cmd: 'detach'
+        , id: container.contained
+      })
+    }
 
-    //container.contains.forEach(function(contained) {
-    //  linkPreconditions = _.merge(linkPreconditions, containerStatus({ id: contained }, 'running'))
-    //  configureOp.subTasks.splice(2, 0, {
-    //      cmd: 'configure'
-    //    , id: contained
-    //  })
-    //})
+    container.contains.forEach(function(contained) {
+      stopPrecondition = _.merge(stopPrecondition, containerStatus({ id: contained }, 'started'))
+      detachOp.subTasks.splice(1, 0, {
+          cmd: 'detach'
+        , id: contained
+      })
+    })
 
     planner.addTask({
         cmd: 'detach'
