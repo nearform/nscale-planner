@@ -4,11 +4,19 @@ var TaskPlanner = require('taskplanner')
 
 function planner(origin, dest)  {
 
-  var tasks   = generateTasks(dest)
+  var tasks = new TaskPlanner()
 
     , cmds    = generateCommands(origin, dest)
 
     , state   = _.cloneDeep(origin)
+
+  tasks.addTask({ cmd: 'nop' }, {})
+  generateOriginTasks(tasks, origin)
+  generateDestTasks(tasks, dest)
+
+  _.forIn(state.topology.containers, function(container) {
+    container.status = 'running'
+  })
 
   _.forIn(dest.topology.containers, function(container) {
     var containers = state.topology.containers
@@ -18,29 +26,43 @@ function planner(origin, dest)  {
           id: container.id
         , status: 'detached'
       }
-    } else {
-      containers[container.id].status = 'running'
     }
   })
 
   return cmds.reduce(function(acc, cmd) {
     return acc.concat(tasks.plan(state, cmd))
   }, []).filter(function(cmd) {
-    return cmd.cmd !== 'nop'
+    return cmd && cmd.cmd !== 'nop'
   })
 }
 
 function generateCommands(origin, dest) {
-  // TODO add stopping/removing instances
-  return _.chain(dest.topology.containers)
-    .values()
-    .map(function(container) {
-      return {
-          cmd: 'configure'
-        , id: container.id
-      }
-    })
-    .value()
+  var destCmds    = _.chain(dest.topology.containers)
+                     .values()
+                     .map(function(container) {
+                       return {
+                           cmd: 'configure'
+                         , id: container.id
+                       }
+                     })
+                     .value()
+
+    , originCmds  = _.chain(origin.topology.containers)
+                     .values()
+                     .map(function(container) {
+                       if (!dest.topology.containers[container.id])
+                         return {
+                             cmd: 'detach'
+                           , id: container.id
+                         }
+
+                       return null
+                     }).filter(function(container) {
+                       return container != null;
+                     })
+                    .value()
+
+  return destCmds.concat(originCmds)
 }
 
 function containerStatus(original, status) {
@@ -60,11 +82,7 @@ function containerStatus(original, status) {
   return state
 }
 
-function generateTasks(dest) {
-
-  var planner = new TaskPlanner()
-
-  planner.addTask({ cmd: 'nop' }, {})
+function generateDestTasks(planner, dest) {
 
   _.forIn(dest.topology.containers, function(container) {
 
@@ -132,8 +150,77 @@ function generateTasks(dest) {
       , effects: containerStatus(container, 'running')
     })
   })
+}
 
-  return planner
+function generateOriginTasks(planner, origin) {
+
+  _.forIn(origin.topology.containers, function(container) {
+
+    var stopSubTask = {
+            cmd: 'stop'
+          , id: container.id
+        }
+      , removeSubTask = {
+            cmd: 'remove'
+          , id: container.id
+        }
+      , unlinkSubTask = {
+            cmd: 'unlink'
+          , id: container.id
+        }
+      , detachOp = {
+            preconditions: containerStatus(container, 'running')
+          , subTasks: [unlinkSubTask, stopSubTask, removeSubTask]
+        }
+      , unlinkPreconditions = containerStatus(container, 'running')
+      , stopPrecondition = containerStatus(container, 'started')
+      , removePrecondition = containerStatus(container, 'added')
+
+    //if (container.contained) {
+    //  configureOp.subTasks[0].parent = container.contained
+    //  addPreconditions = _.merge(addPreconditions, containerStatus(container.contained, 'running'))
+    //  configureOp.subTasks.unshift({
+    //      cmd: 'configure'
+    //    , id: container.contained
+    //  })
+    //}
+
+    //container.contains.forEach(function(contained) {
+    //  linkPreconditions = _.merge(linkPreconditions, containerStatus({ id: contained }, 'running'))
+    //  configureOp.subTasks.splice(2, 0, {
+    //      cmd: 'configure'
+    //    , id: contained
+    //  })
+    //})
+
+    planner.addTask({
+        cmd: 'detach'
+      , id: container.id
+    }, {
+        preconditions: containerStatus(container, 'detached')
+      , subTasks: [{ cmd: 'nop' }]
+    })
+
+    planner.addTask({
+        cmd: 'detach'
+      , id: container.id
+    }, detachOp)
+
+    planner.addTask(unlinkSubTask, {
+        preconditions: unlinkPreconditions
+      , effects: containerStatus(container, 'started')
+    })
+
+    planner.addTask(stopSubTask, {
+        preconditions: containerStatus(container, 'started')
+      , effects: containerStatus(container, 'added')
+    })
+
+    planner.addTask(removeSubTask, {
+        preconditions: removePrecondition
+      , effects: containerStatus(container, 'detached')
+    })
+  })
 }
 
 module.exports = planner

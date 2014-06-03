@@ -64,4 +64,87 @@ describe("dirty sheet planning", function() {
    }])
   })
 
+  it("should create a plan that stops a machine", function() {
+
+    var machine1 = defineMachine(amiDefinition)
+
+      , dest = {
+            "name": "single instance"
+          , "namespace": "single instance"
+          , "id": uuid.v1()
+          , "containerdefinitions": [ amiDefinition, dockDef ]
+          , "topology": {
+                "containers": {}
+            }
+        }
+
+      , plan
+
+      , currOrig = _.cloneDeep(origin)
+
+
+   currOrig.topology.containers[machine1.id] = machine1
+
+   plan = planner(currOrig, dest)
+
+   expect(plan).to.eql([{
+       cmd: "unlink"
+     , id: machine1.id
+   }, {
+       cmd: "stop"
+     , id: machine1.id
+   }, {
+       cmd: "remove"
+     , id: machine1.id
+   }])
+  })
+
+
+  it("should create a plan that stops and starts a machine", function() {
+
+    var machine1 = defineMachine(amiDefinition)
+
+      , machine2 = defineMachine(amiDefinition)
+
+      , dest = {
+            "name": "single instance"
+          , "namespace": "single instance"
+          , "id": uuid.v1()
+          , "containerdefinitions": [ amiDefinition, dockDef ]
+          , "topology": {
+                "containers": {}
+            }
+        }
+
+      , plan
+
+      , currOrig = _.cloneDeep(origin)
+
+
+   currOrig.topology.containers[machine1.id] = machine1
+
+   dest.topology.containers[machine2.id] = machine2
+
+   plan = planner(currOrig, dest)
+
+   expect(plan).to.eql([{
+       cmd: "add"
+     , id: machine2.id
+   }, {
+       cmd: "start"
+     , id: machine2.id
+   }, {
+       cmd: "link"
+     , id: machine2.id
+   }, {
+       cmd: "unlink"
+     , id: machine1.id
+   }, {
+       cmd: "stop"
+     , id: machine1.id
+   }, {
+       cmd: "remove"
+     , id: machine1.id
+   }])
+  })
 })
