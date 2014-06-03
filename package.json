@@ -1,13 +1,14 @@
 {
   "name": "nfd-planner",
-  "version": "0.0.0",
-  "description": "",
+  "version": "0.0.1",
+  "description": "Plan your deployements, easily",
   "main": "index.js",
+  "private": true,
   "scripts": {
     "test": "mocha --bail test"
   },
   "pre-commit": "test",
-  "author": "",
+  "author": "Matteo Collina <matteo.collina@nearform.com>",
   "license": "private",
   "devDependencies": {
     "must": "~0.11.0",
