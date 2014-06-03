@@ -15,8 +15,6 @@ describe("dirty sheet planning", function() {
     , defineMachine = fixture.defineMachine
     , buildSheet    = fixture.buildSheet
 
-    , origin = buildSheet("dirty sheet")
-
   it("should create a plan that starts a machine, inside another", function() {
 
     var machine1 = defineMachine(amiDefinition)
@@ -27,15 +25,15 @@ describe("dirty sheet planning", function() {
 
       , plan
 
-      , currOrig = _.cloneDeep(origin)
+      , origin = buildSheet("dirty sheet")
 
 
-   currOrig.topology.containers[machine1.id] = machine1
+   origin.topology.containers[machine1.id] = machine1
 
    dest.topology.containers[machine1.id] = machine1
    dest.topology.containers[machine2.id] = machine2
 
-   plan = planner(currOrig, dest)
+   plan = planner(origin, dest)
 
    expect(plan).to.eql([{
        cmd: "add"
@@ -59,14 +57,13 @@ describe("dirty sheet planning", function() {
 
       , plan
 
-      , currOrig = _.cloneDeep(origin)
+      , origin = buildSheet("dirty sheet")
 
-
-   currOrig.topology.containers[machine1.id] = machine1
+   origin.topology.containers[machine1.id] = machine1
 
    dest.topology.containers[machine2.id] = machine2
 
-   plan = planner(currOrig, dest)
+   plan = planner(origin, dest)
 
    expect(plan).to.eql([{
        cmd: "add"
@@ -86,6 +83,73 @@ describe("dirty sheet planning", function() {
    }, {
        cmd: "remove"
      , id: machine1.id
+   }])
+  })
+
+  it("should create a plan that stops an AMI with a Docker and starts two similar one", function() {
+
+    var machine1 = defineMachine(elbDefinition)
+
+      , machine2 = defineMachine(amiDefinition, machine1)
+
+      , machine3 = defineMachine(dockDef, machine2)
+
+      , machine4 = defineMachine(amiDefinition, machine1)
+
+      , machine5 = defineMachine(dockDef, machine4)
+
+      , dest = buildSheet("full setup")
+
+      , origin = buildSheet("dirty sheet")
+
+      , plan
+
+   origin.topology.containers[machine1.id] = machine1
+   origin.topology.containers[machine2.id] = machine2
+   origin.topology.containers[machine3.id] = machine3
+
+   dest.topology.containers[machine1.id] = machine1
+   dest.topology.containers[machine4.id] = machine4
+   dest.topology.containers[machine5.id] = machine5
+
+   plan = planner(origin, dest)
+
+   expect(plan).to.eql([{
+       cmd: "add"
+     , id: machine4.id
+   }, {
+       cmd: "start"
+     , id: machine4.id
+   }, {
+       cmd: "add"
+     , id: machine5.id
+   }, {
+       cmd: "start"
+     , id: machine5.id
+   }, {
+       cmd: "link"
+     , id: machine5.id
+   }, {
+       cmd: "link"
+     , id: machine4.id
+   }, {
+       cmd: "unlink"
+     , id: machine2.id
+   }, {
+       cmd: "unlink"
+     , id: machine3.id
+   }, {
+       cmd: "stop"
+     , id: machine3.id
+   }, {
+       cmd: "remove"
+     , id: machine3.id
+   }, {
+       cmd: "stop"
+     , id: machine2.id
+   }, {
+       cmd: "remove"
+     , id: machine2.id
    }])
   })
 })
