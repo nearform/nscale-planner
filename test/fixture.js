@@ -37,7 +37,20 @@ function defineMachine(definition, containedBy) {
   return result
 }
 
+function buildSheet(name) {
+  return {
+      "name": name
+    , "namespace": name
+    , "id": uuid.v1()
+    , "containerDefinitions": [amiDefinition, elbDefinition, dockerDefinition]
+    , "topology": {
+          "containers": {}
+      }
+  }
+}
+
 module.exports.elbDefinition = elbDefinition
 module.exports.amiDefinition = amiDefinition
 module.exports.dockerDefinition = dockerDefinition
 module.exports.defineMachine = defineMachine
+module.exports.buildSheet = buildSheet

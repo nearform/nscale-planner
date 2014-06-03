@@ -12,30 +12,15 @@ describe("white sheet planning", function() {
     , amiDefinition = fixture.amiDefinition
     , dockDef       = fixture.dockerDefinition
     , defineMachine = fixture.defineMachine
+    , buildSheet    = fixture.buildSheet
 
-    , origin = {
-          "name": "white sheet"
-        , "namespace": "white sheet"
-        , "id": uuid.v1()
-        , "containerDefinitions": []
-        , "topology": {
-              "containers": {}
-          }
-      }
+    , origin = buildSheet("white sheet")
 
   it("should create a plan that starts a machine", function() {
 
     var machine = defineMachine(amiDefinition)
 
-      , dest = {
-            "name": "single instance"
-          , "namespace": "single instance"
-          , "id": uuid.v1()
-          , "containerdefinitions": [ amiDefinition ]
-          , "topology": {
-                "containers": {}
-            }
-        }
+      , dest = buildSheet("single instance")
 
       , plan
 
@@ -61,15 +46,7 @@ describe("white sheet planning", function() {
 
       , machine2 = defineMachine(amiDefinition)
 
-      , dest = {
-            "name": "single instance"
-          , "namespace": "single instance"
-          , "id": uuid.v1()
-          , "containerdefinitions": [ amiDefinition ]
-          , "topology": {
-                "containers": {}
-            }
-        }
+      , dest = buildSheet("two instances")
 
       , plan
 
@@ -105,15 +82,7 @@ describe("white sheet planning", function() {
 
       , machine2 = defineMachine(dockDef, machine1)
 
-      , dest = {
-            "name": "single instance"
-          , "namespace": "single instance"
-          , "id": uuid.v1()
-          , "containerdefinitions": [ amiDefinition ]
-          , "topology": {
-                "containers": {}
-            }
-        }
+      , dest = buildSheet("basic container")
 
       , plan
 
@@ -151,15 +120,7 @@ describe("white sheet planning", function() {
 
       , machine3 = defineMachine(dockDef, machine1)
 
-      , dest = {
-            "name": "single instance"
-          , "namespace": "single instance"
-          , "id": uuid.v1()
-          , "containerdefinitions": [ amiDefinition ]
-          , "topology": {
-                "containers": {}
-            }
-        }
+      , dest = buildSheet("two dockers")
 
       , plan
 
@@ -207,15 +168,7 @@ describe("white sheet planning", function() {
 
       , machine3 = defineMachine(dockDef, machine2)
 
-      , dest = {
-            "name": "single instance"
-          , "namespace": "single instance"
-          , "id": uuid.v1()
-          , "containerdefinitions": [ amiDefinition, dockDef, elbDefinition ]
-          , "topology": {
-                "containers": {}
-            }
-        }
+      , dest = buildSheet("full setup")
 
       , plan
 

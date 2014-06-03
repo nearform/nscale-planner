@@ -13,16 +13,9 @@ describe("dirty sheet planning", function() {
     , amiDefinition = fixture.amiDefinition
     , dockDef       = fixture.dockerDefinition
     , defineMachine = fixture.defineMachine
+    , buildSheet    = fixture.buildSheet
 
-    , origin = {
-          "name": "white sheet"
-        , "namespace": "white sheet"
-        , "id": uuid.v1()
-        , "containerDefinitions": []
-        , "topology": {
-              "containers": {}
-          }
-      }
+    , origin = buildSheet("dirty sheet")
 
   it("should create a plan that starts a machine, inside another", function() {
 
@@ -30,15 +23,7 @@ describe("dirty sheet planning", function() {
 
       , machine2 = defineMachine(dockDef, machine1)
 
-      , dest = {
-            "name": "single instance"
-          , "namespace": "single instance"
-          , "id": uuid.v1()
-          , "containerdefinitions": [ amiDefinition, dockDef ]
-          , "topology": {
-                "containers": {}
-            }
-        }
+      , dest = buildSheet("start inside another")
 
       , plan
 
@@ -64,57 +49,13 @@ describe("dirty sheet planning", function() {
    }])
   })
 
-  it("should create a plan that stops a machine", function() {
-
-    var machine1 = defineMachine(amiDefinition)
-
-      , dest = {
-            "name": "single instance"
-          , "namespace": "single instance"
-          , "id": uuid.v1()
-          , "containerdefinitions": [ amiDefinition, dockDef ]
-          , "topology": {
-                "containers": {}
-            }
-        }
-
-      , plan
-
-      , currOrig = _.cloneDeep(origin)
-
-
-   currOrig.topology.containers[machine1.id] = machine1
-
-   plan = planner(currOrig, dest)
-
-   expect(plan).to.eql([{
-       cmd: "unlink"
-     , id: machine1.id
-   }, {
-       cmd: "stop"
-     , id: machine1.id
-   }, {
-       cmd: "remove"
-     , id: machine1.id
-   }])
-  })
-
-
   it("should create a plan that stops and starts a machine", function() {
 
     var machine1 = defineMachine(amiDefinition)
 
       , machine2 = defineMachine(amiDefinition)
 
-      , dest = {
-            "name": "single instance"
-          , "namespace": "single instance"
-          , "id": uuid.v1()
-          , "containerdefinitions": [ amiDefinition, dockDef ]
-          , "topology": {
-                "containers": {}
-            }
-        }
+      , dest = buildSheet("start and stop")
 
       , plan
 
