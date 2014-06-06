@@ -5,7 +5,7 @@
   "main": "index.js",
   "private": true,
   "scripts": {
-    "test": "mocha --bail test"
+    "test": "mocha --bail test/*"
   },
   "pre-commit": "test",
   "author": "Matteo Collina <matteo.collina@nearform.com>",
