@@ -62,7 +62,7 @@ function generateCommands(origin, dest) {
                      })
                     .value()
 
-  return destCmds.concat(originCmds)
+  return originCmds.concat(destCmds)
 }
 
 function containerStatus(original, status) {

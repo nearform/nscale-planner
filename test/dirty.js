@@ -66,15 +66,6 @@ describe("dirty sheet planning", function() {
    plan = planner(origin, dest)
 
    expect(plan).to.eql([{
-       cmd: "add"
-     , id: machine2.id
-   }, {
-       cmd: "start"
-     , id: machine2.id
-   }, {
-       cmd: "link"
-     , id: machine2.id
-   }, {
        cmd: "unlink"
      , id: machine1.id
    }, {
@@ -83,6 +74,15 @@ describe("dirty sheet planning", function() {
    }, {
        cmd: "remove"
      , id: machine1.id
+   }, {
+       cmd: "add"
+     , id: machine2.id
+   }, {
+       cmd: "start"
+     , id: machine2.id
+   }, {
+       cmd: "link"
+     , id: machine2.id
    }])
   })
 
@@ -117,24 +117,6 @@ describe("dirty sheet planning", function() {
    plan = planner(origin, dest)
 
    expect(plan).to.eql([{
-       cmd: "add"
-     , id: machine4.id
-   }, {
-       cmd: "start"
-     , id: machine4.id
-   }, {
-       cmd: "add"
-     , id: machine5.id
-   }, {
-       cmd: "start"
-     , id: machine5.id
-   }, {
-       cmd: "link"
-     , id: machine5.id
-   }, {
-       cmd: "link"
-     , id: machine4.id
-   }, {
        cmd: "unlink"
      , id: machine2.id
    }, {
@@ -152,6 +134,24 @@ describe("dirty sheet planning", function() {
    }, {
        cmd: "remove"
      , id: machine2.id
+   }, {
+       cmd: "add"
+     , id: machine4.id
+   }, {
+       cmd: "start"
+     , id: machine4.id
+   }, {
+       cmd: "add"
+     , id: machine5.id
+   }, {
+       cmd: "start"
+     , id: machine5.id
+   }, {
+       cmd: "link"
+     , id: machine5.id
+   }, {
+       cmd: "link"
+     , id: machine4.id
    }])
   })
 })
