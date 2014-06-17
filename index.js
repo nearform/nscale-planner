@@ -40,9 +40,21 @@ function generateCommands(origin, dest) {
   var destCmds    = _.chain(dest.topology.containers)
                      .values()
                      .map(function(container) {
-                       return {
-                           cmd: 'configure'
-                         , id: container.id
+                       var origConts = origin.topology.containers
+
+                       if (origConts[container.id] && origConts[container.id].containedBy != container.containedBy) {
+                         return [{
+                             cmd: 'detach'
+                           , id: container.id
+                         }, {
+                             cmd: 'configure'
+                           , id: container.id
+                         }]
+                       } else {
+                         return {
+                             cmd: 'configure'
+                           , id: container.id
+                         }
                        }
                      })
                      .value()
