@@ -1,6 +1,7 @@
 
 var TaskPlanner = require('taskplanner')
   , _           = require('lodash')
+  , assert      = require('assert')
 
 function planner(origin, dest)  {
 
@@ -15,7 +16,9 @@ function planner(origin, dest)  {
   generateDestTasks(tasks, dest)
 
   _.forIn(state.topology.containers, function(container) {
-    container.status = 'running'
+    container.running = true
+    container.started = true
+    container.added = true
   })
 
   _.forIn(dest.topology.containers, function(container) {
@@ -24,7 +27,9 @@ function planner(origin, dest)  {
     if (!containers[container.id]) {
       containers[container.id] = {
           id: container.id
-        , status: 'detached'
+        , running: false
+        , started: false
+        , added: false
       }
     }
   })
@@ -77,7 +82,36 @@ function generateCommands(origin, dest) {
   return originCmds.concat(destCmds)
 }
 
-function containerStatus(original, status) {
+function containerStatus(original, added, started, running) {
+  if (typeof added === 'string') {
+    switch(added) {
+      case 'detached':
+        added   = false
+        started = false
+        running = false
+        break
+      case 'added':
+        added   = true
+        started = false
+        running = false
+        break
+      case 'started':
+        added   = true
+        started = true
+        running = false
+        break
+      case 'running':
+        added   = true
+        started = true
+        running = true
+        break
+
+      default:
+        throw new Error('unknown state')
+
+    }
+  }
+
   var state = {
           topology: {
               containers: {}
@@ -86,7 +120,9 @@ function containerStatus(original, status) {
 
     , container = {
           id: original.id
-        , status: status
+        , running: running
+        , started: started
+        , added: added
       }
 
   state.topology.containers[container.id] = container
