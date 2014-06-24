@@ -47,7 +47,7 @@ describe("dirty sheet planning", function() {
    }])
   })
 
-  it("should create a plan that stops and starts a machine", function() {
+  it("should create a plan that starts and stops two unrelated machines", function() {
 
     var machine1 = defineMachine(amiDefinition)
 
@@ -66,15 +66,6 @@ describe("dirty sheet planning", function() {
    plan = planner(origin, dest)
 
    expect(plan).to.eql([{
-       cmd: "unlink"
-     , id: machine1.id
-   }, {
-       cmd: "stop"
-     , id: machine1.id
-   }, {
-       cmd: "remove"
-     , id: machine1.id
-   }, {
        cmd: "add"
      , id: machine2.id
    }, {
@@ -83,6 +74,15 @@ describe("dirty sheet planning", function() {
    }, {
        cmd: "link"
      , id: machine2.id
+   }, {
+       cmd: "unlink"
+     , id: machine1.id
+   }, {
+       cmd: "stop"
+     , id: machine1.id
+   }, {
+       cmd: "remove"
+     , id: machine1.id
    }])
   })
 
@@ -207,6 +207,85 @@ describe("dirty sheet planning", function() {
    }, {
        cmd: "link"
      , id: machine3Orig.id
+   }])
+  })
+
+  it("should work in a deep-first manner by default", function() {
+
+    var machine1 = defineMachine(elbDefinition)
+
+      , machine2Orig = defineMachine(amiDefinition, machine1)
+
+      , machine2Dest = _.cloneDeep(machine2Orig)
+
+      , machine3Orig = defineMachine(amiDefinition, machine1)
+
+      , machine3Dest = _.cloneDeep(machine3Orig)
+
+      , machine4 = defineMachine(dockDef, machine2Orig)
+
+      , machine5 = defineMachine(dockDef, machine3Orig)
+
+      , machine6 = defineMachine(dockDef, machine2Dest)
+
+      , machine7 = defineMachine(dockDef, machine3Dest)
+
+      , dest = buildSheet("full setup")
+
+      , origin = buildSheet("dirty sheet")
+
+      , plan
+
+   origin.topology.containers[machine1.id] = machine1
+   origin.topology.containers[machine2Orig.id] = machine2Orig
+   origin.topology.containers[machine3Orig.id] = machine3Orig
+   origin.topology.containers[machine4.id] = machine4
+   origin.topology.containers[machine5.id] = machine5
+
+   dest.topology.containers[machine1.id] = machine1
+   dest.topology.containers[machine2Dest.id] = machine2Dest
+   dest.topology.containers[machine3Dest.id] = machine3Dest
+   dest.topology.containers[machine6.id] = machine6
+   dest.topology.containers[machine7.id] = machine7
+
+   plan = planner(origin, dest)
+
+   expect(plan).to.eql([{
+       cmd: "unlink"
+     , id: machine4.id
+   }, {
+       cmd: "stop"
+     , id: machine4.id
+   }, {
+       cmd: "remove"
+     , id: machine4.id
+   }, {
+       cmd: "add"
+     , id: machine6.id
+   }, {
+       cmd: "start"
+     , id: machine6.id
+   }, {
+       cmd: "link"
+     , id: machine6.id
+   }, {
+       cmd: "unlink"
+     , id: machine5.id
+   }, {
+       cmd: "stop"
+     , id: machine5.id
+   }, {
+       cmd: "remove"
+     , id: machine5.id
+   }, {
+       cmd: "add"
+     , id: machine7.id
+   }, {
+       cmd: "start"
+     , id: machine7.id
+   }, {
+       cmd: "link"
+     , id: machine7.id
    }])
   })
 })

@@ -13,7 +13,7 @@ function planner(origin, dest)  {
 
   tasks.addTask({ cmd: 'nop' }, {})
   generateOriginTasks(tasks, origin)
-  generateDestTasks(tasks, dest)
+  generateDestTasks(tasks, origin, dest)
 
   _.forIn(state.topology.containers, function(container) {
     container.running = true
@@ -46,22 +46,13 @@ function planner(origin, dest)  {
 function generateCommands(origin, dest) {
   var destCmds    = _.chain(dest.topology.containers)
                      .values()
+                     .filter(function(container) {
+                       return container.containedBy != container.id
+                     })
                      .map(function(container) {
-                       var origConts = origin.topology.containers
-
-                       if (origConts[container.id] && origConts[container.id].containedBy != container.containedBy) {
-                         return [{
-                             cmd: 'detach'
-                           , id: container.id
-                         }, {
-                             cmd: 'configure'
-                           , id: container.id
-                         }]
-                       } else {
-                         return {
-                             cmd: 'configure'
-                           , id: container.id
-                         }
+                       return {
+                           cmd: 'configure'
+                         , id: container.id
                        }
                      })
                      .value()
@@ -81,7 +72,7 @@ function generateCommands(origin, dest) {
                      })
                     .value()
 
-  return originCmds.concat(destCmds)
+  return destCmds.concat(originCmds)
 }
 
 function containerStatus(original, status) {
@@ -122,7 +113,7 @@ function containerStatus(original, status) {
   return state
 }
 
-function generateDestTasks(planner, dest) {
+function generateDestTasks(planner, origin, dest) {
 
   _.forIn(dest.topology.containers, function(container) {
 
@@ -142,16 +133,24 @@ function generateDestTasks(planner, dest) {
             preconditions: containerStatus(container, 'detached')
           , subTasks: [addSubTask, startSubTask, linkSubTask]
         }
+      , configureNop = {
+          preconditions: containerStatus(container, 'started')
+        , subTasks: [{ cmd: 'nop' }]
+        }
       , addPreconditions = containerStatus(container, 'detached')
       , linkPreconditions = containerStatus(container, 'started')
-      , parent = dest.topology.containers[container.containedBy]
 
-    // the parent must be configured
-    if (parent) {
-      addPreconditions = _.merge(addPreconditions, containerStatus(parent, 'started'))
-      configureOp.subTasks.unshift({
-          cmd: 'configure'
-        , id: parent.id
+    // let's detach all 'old' containers
+    if (origin.topology.containers[container.id]) {
+      origin.topology.containers[container.id].contains.forEach(function(contained) {
+        if (container.contains.indexOf(contained) === -1) {
+          // the current contained is NOT included in the dest status
+          // so we detach it
+          configureNop.subTasks.splice(1, 0, {
+              cmd: 'detach'
+            , id: contained
+          })
+        }
       })
     }
 
@@ -159,7 +158,13 @@ function generateDestTasks(planner, dest) {
     container.contains.forEach(function(contained) {
       linkPreconditions = _.merge(linkPreconditions, containerStatus({ id: contained }, 'running'))
       // we need ot add those before the link
+
       configureOp.subTasks.splice(configureOp.subTasks.length - 1, 0, {
+          cmd: 'configure'
+        , id: contained
+      })
+
+      configureNop.subTasks.push({
           cmd: 'configure'
         , id: contained
       })
@@ -169,11 +174,9 @@ function generateDestTasks(planner, dest) {
     planner.addTask({
         cmd: 'configure'
       , id: container.id
-    }, {
-        preconditions: containerStatus(container, 'started')
-      , subTasks: [{ cmd: 'nop' }]
-    })
+    }, configureNop)
 
+    // real configure task
     planner.addTask({
         cmd: 'configure'
       , id: container.id
