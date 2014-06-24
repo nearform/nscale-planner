@@ -138,22 +138,22 @@ describe("white sheet planning", function() {
      , id: machine1.id
    }, {
        cmd: "add"
-     , id: machine3.id
+     , id: machine2.id
    }, {
        cmd: "start"
-     , id: machine3.id
+     , id: machine2.id
    }, {
        cmd: "link"
-     , id: machine3.id
+     , id: machine2.id
    }, {
        cmd: "add"
-     , id: machine2.id
+     , id: machine3.id
    }, {
        cmd: "start"
-     , id: machine2.id
+     , id: machine3.id
    }, {
        cmd: "link"
-     , id: machine2.id
+     , id: machine3.id
    }, {
        cmd: "link"
      , id: machine1.id

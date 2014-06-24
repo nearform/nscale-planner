@@ -86,7 +86,7 @@ describe("dirty sheet planning", function() {
    }])
   })
 
-  it("should create a plan that stops an AMI with a Docker and starts two similar one", function() {
+  it("should create a plan that stops an AMI with a Docker and starts two similar ones", function() {
 
     var machine1Origin  = defineMachine(elbDefinition)
 

@@ -1,6 +1,7 @@
 
 var TaskPlanner = require('taskplanner')
   , _           = require('lodash')
+  , assert      = require('assert')
 
 function planner(origin, dest)  {
 
@@ -15,7 +16,9 @@ function planner(origin, dest)  {
   generateDestTasks(tasks, dest)
 
   _.forIn(state.topology.containers, function(container) {
-    container.status = 'running'
+    container.running = true
+    container.started = true
+    container.added = true
   })
 
   _.forIn(dest.topology.containers, function(container) {
@@ -24,13 +27,17 @@ function planner(origin, dest)  {
     if (!containers[container.id]) {
       containers[container.id] = {
           id: container.id
-        , status: 'detached'
+        , running: false
+        , started: false
+        , added: false
       }
     }
   })
 
   return cmds.reduce(function(acc, cmd) {
-    return acc.concat(tasks.plan(state, cmd))
+    var plan = tasks.plan(state, cmd)
+    if (!plan) throw new Error('unable to generate ' + cmd.cmd + ' for id ' + cmd.id)
+    return acc.concat(plan)
   }, []).filter(function(cmd) {
     return cmd && cmd.cmd !== 'nop'
   })
@@ -78,6 +85,7 @@ function generateCommands(origin, dest) {
 }
 
 function containerStatus(original, status) {
+
   var state = {
           topology: {
               containers: {}
@@ -86,8 +94,28 @@ function containerStatus(original, status) {
 
     , container = {
           id: original.id
-        , status: status
       }
+
+  switch(status) {
+    case 'detached':
+      container.added   = false
+      container.started = false
+      container.running = false
+      break
+    case 'added':
+      container.added   = true
+      break
+    case 'started':
+      container.started = true
+      break
+    case 'running':
+      container.running = true
+      break
+
+    default:
+      throw new Error('unknown state')
+
+  }
 
   state.topology.containers[container.id] = container
 
@@ -116,28 +144,33 @@ function generateDestTasks(planner, dest) {
         }
       , addPreconditions = containerStatus(container, 'detached')
       , linkPreconditions = containerStatus(container, 'started')
+      , parent = dest.topology.containers[container.containedBy]
 
-    if (container.contained) {
-      addPreconditions = _.merge(addPreconditions, containerStatus(container.contained, 'running'))
+    // the parent must be configured
+    if (parent) {
+      addPreconditions = _.merge(addPreconditions, containerStatus(parent, 'started'))
       configureOp.subTasks.unshift({
           cmd: 'configure'
-        , id: container.contained
+        , id: parent.id
       })
     }
 
+    // the children container must be configured before linking
     container.contains.forEach(function(contained) {
       linkPreconditions = _.merge(linkPreconditions, containerStatus({ id: contained }, 'running'))
-      configureOp.subTasks.splice(2, 0, {
+      // we need ot add those before the link
+      configureOp.subTasks.splice(configureOp.subTasks.length - 1, 0, {
           cmd: 'configure'
         , id: contained
       })
     })
 
+    // if a container is already running, there is nothing to do
     planner.addTask({
         cmd: 'configure'
       , id: container.id
     }, {
-        preconditions: containerStatus(container, 'running')
+        preconditions: containerStatus(container, 'started')
       , subTasks: [{ cmd: 'nop' }]
     })
 
