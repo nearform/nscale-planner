@@ -2,18 +2,28 @@
 var TaskPlanner = require('taskplanner')
   , _           = require('lodash')
   , assert      = require('assert')
+  , xtend       = require('xtend')
+  , defaults    = {
+      mode: 'quick'
+    }
 
-function planner(origin, dest)  {
+function planner(origin, dest, opts)  {
 
-  var tasks = new TaskPlanner()
+  var tasks     = new TaskPlanner()
 
-    , cmds    = generateCommands(origin, dest)
+    , cmds      = generateCommands(origin, dest)
 
-    , state   = _.cloneDeep(origin)
+    , state     = _.cloneDeep(origin)
+
+    , skipNext  = false
+
+  opts = xtend(defaults, opts);
+
+  assert(opts.mode === 'quick' || opts.mode === 'safe', 'unknown mode')
 
   tasks.addTask({ cmd: 'nop' }, {})
-  generateOriginTasks(tasks, origin)
-  generateDestTasks(tasks, origin, dest)
+  generateOriginTasks(tasks, origin, opts)
+  generateDestTasks(tasks, origin, dest, opts)
 
   _.forIn(state.topology.containers, function(container) {
     container.running = true
@@ -34,13 +44,36 @@ function planner(origin, dest)  {
     }
   })
 
+
   return cmds.reduce(function(acc, cmd) {
     var plan = tasks.plan(state, cmd)
     if (!plan) throw new Error('unable to generate ' + cmd.cmd + ' for id ' + cmd.id)
     return acc.concat(plan)
   }, []).filter(function(cmd) {
     return cmd && cmd.cmd !== 'nop'
-  })
+  }).filter(function(cmd, i, cmds) {
+
+    if (skipNext) {
+      skipNext = false
+      return false
+    }
+
+    if (!cmds[i + 1])
+      return true
+
+    if (cmds[i + 1].id !== cmd.id)
+      return true
+
+    var unlinkLink = (cmd.cmd === 'unlink' && cmds[i + 1].cmd === 'link')
+      , linkUnlink = (cmd.cmd === 'link' && cmds[i + 1].cmd === 'unlink')
+
+    if (linkUnlink || unlinkLink) {
+      skipNext = true
+      return false
+    }
+
+    return true
+  });
 }
 
 function generateCommands(origin, dest) {
@@ -113,7 +146,7 @@ function containerStatus(original, status) {
   return state
 }
 
-function generateDestTasks(planner, origin, dest) {
+function generateDestTasks(planner, origin, dest, opts) {
 
   _.forIn(dest.topology.containers, function(container) {
 
@@ -142,16 +175,49 @@ function generateDestTasks(planner, origin, dest) {
 
     // let's detach all 'old' containers
     if (origin.topology.containers[container.id]) {
-      origin.topology.containers[container.id].contains.forEach(function(contained) {
-        if (container.contains.indexOf(contained) === -1) {
-          // the current contained is NOT included in the dest status
-          // so we detach it
-          configureNop.subTasks.splice(1, 0, {
-              cmd: 'detach'
-            , id: contained
-          })
+      var ops = origin.topology.containers[container.id].contains.filter(function(contained) {
+        return container.contains.indexOf(contained) === -1
+      }).map(function(contained) {
+        // the current contained is NOT included in the dest status
+        // so we detach it
+        return {
+            cmd: 'detach'
+          , id: contained
         }
       })
+
+      if (ops.length > 0) {
+
+        // we add it only top the nop tasks because it is already there
+        configureNop.subTasks = ops
+      }
+
+      if (opts.mode === 'safe') {
+
+        ops.unshift({
+            cmd: 'unlink'
+          , id: container.id
+        })
+
+        allParentsIds(dest, container).forEach(function(id) {
+          var op = configureOp
+
+          ops.unshift({
+              cmd: 'unlink'
+            , id: id
+          })
+
+          ops.push({
+              cmd: 'link'
+            , id: id
+          })
+        });
+
+        ops.push({
+            cmd: 'link'
+          , id: container.id
+        })
+      }
     }
 
     // the children container must be configured before linking
@@ -169,6 +235,25 @@ function generateDestTasks(planner, origin, dest) {
         , id: contained
       })
     })
+
+    if (opts.mode === 'safe') {
+      // TODO we should unlink the parent before doing anything
+      // and link back after
+      allParentsIds(dest, container).forEach(function(id) {
+
+        var op = configureOp
+
+        op.subTasks.unshift({
+            cmd: 'unlink'
+          , id: id
+        })
+
+        op.subTasks.push({
+            cmd: 'link'
+          , id: id
+        })
+      });
+    }
 
     // if a container is already running, there is nothing to do
     planner.addTask({
@@ -196,10 +281,14 @@ function generateDestTasks(planner, origin, dest) {
         preconditions: linkPreconditions
       , effects: containerStatus(container, 'running')
     })
+
+    planner.addTask(linkSubTask, {
+        preconditions: containerStatus(container, 'running')
+    })
   })
 }
 
-function generateOriginTasks(planner, origin) {
+function generateOriginTasks(planner, origin, opts) {
 
   _.forIn(origin.topology.containers, function(container) {
 
@@ -239,6 +328,11 @@ function generateOriginTasks(planner, origin) {
       })
     })
 
+    if (opts.mode === 'safe') {
+      // TODO we should unlink the parent before doing anything
+      // and link back after
+    }
+
     planner.addTask({
         cmd: 'detach'
       , id: container.id
@@ -257,6 +351,11 @@ function generateOriginTasks(planner, origin) {
       , effects: containerStatus(container, 'started')
     })
 
+    planner.addTask(unlinkSubTask, {
+        preconditions: containerStatus(container, 'started')
+      , subTasks: [{ cmd: 'nop' }]
+    })
+
     planner.addTask(stopSubTask, {
         preconditions: containerStatus(container, 'started')
       , effects: containerStatus(container, 'added')
@@ -267,6 +366,21 @@ function generateOriginTasks(planner, origin) {
       , effects: containerStatus(container, 'detached')
     })
   })
+}
+
+function allParentsIds(context, container, parents) {
+  var isLeaf = parents === undefined
+
+  parents = parents || []
+
+  if (!container.containedBy)
+    return parents
+
+  if (!isLeaf)
+    parents.push(container.id);
+
+  // let's order them by tree order
+  return allParentsIds(context, context.topology.containers[container.containedBy], parents);
 }
 
 module.exports = planner

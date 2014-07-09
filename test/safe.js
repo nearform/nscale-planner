@@ -5,7 +5,7 @@ var planner = require("../")
   , _       = require("lodash")
   , fixture = require("./fixture")
 
-describe("dirty sheet planning", function() {
+describe("dirty sheet planning with safe mode", function() {
 
   var instance
 
@@ -15,90 +15,17 @@ describe("dirty sheet planning", function() {
     , defineMachine = fixture.defineMachine
     , buildSheet    = fixture.buildSheet
 
-  it("should create a plan that starts a machine, inside another", function() {
+  it("should create a plan that unlinks and re-links the AWS instances to the ELB", function() {
 
-    var machine1 = defineMachine(amiDefinition)
+    var machine1 = defineMachine(elbDefinition)
 
-      , machine2 = defineMachine(dockDef, machine1)
+      , machine2Origin = defineMachine(amiDefinition, machine1)
 
-      , dest = buildSheet("start inside another")
+      , machine2Dest    = _.cloneDeep(machine2Origin)
 
-      , plan
+      , machine3 = defineMachine(dockDef, machine2Origin)
 
-      , origin = buildSheet("dirty sheet")
-
-
-   origin.topology.containers[machine1.id] = machine1
-
-   dest.topology.containers[machine1.id] = machine1
-   dest.topology.containers[machine2.id] = machine2
-
-   plan = planner(origin, dest)
-
-   expect(plan).to.eql([{
-       cmd: "add"
-     , id: machine2.id
-   }, {
-       cmd: "start"
-     , id: machine2.id
-   }, {
-       cmd: "link"
-     , id: machine2.id
-   }])
-  })
-
-  it("should create a plan that starts and stops two unrelated machines", function() {
-
-    var machine1 = defineMachine(amiDefinition)
-
-      , machine2 = defineMachine(amiDefinition)
-
-      , dest = buildSheet("start and stop")
-
-      , plan
-
-      , origin = buildSheet("dirty sheet")
-
-   origin.topology.containers[machine1.id] = machine1
-
-   dest.topology.containers[machine2.id] = machine2
-
-   plan = planner(origin, dest)
-
-   expect(plan).to.eql([{
-       cmd: "add"
-     , id: machine2.id
-   }, {
-       cmd: "start"
-     , id: machine2.id
-   }, {
-       cmd: "link"
-     , id: machine2.id
-   }, {
-       cmd: "unlink"
-     , id: machine1.id
-   }, {
-       cmd: "stop"
-     , id: machine1.id
-   }, {
-       cmd: "remove"
-     , id: machine1.id
-   }])
-  })
-
-  it("should create a plan that stops an AMI with a Docker and starts two similar ones", function() {
-
-    var machine1Origin  = defineMachine(elbDefinition)
-
-      , machine1Dest    = _.cloneDeep(machine1Origin)
-
-      , machine2 = defineMachine(amiDefinition, machine1Origin)
-
-      , machine3 = defineMachine(dockDef, machine2)
-
-      , machine4 = defineMachine(amiDefinition, machine1Dest)
-
-      , machine5 = defineMachine(dockDef, machine4)
+      , machine4 = defineMachine(dockDef, machine2Dest)
 
       , dest = buildSheet("full setup")
 
@@ -106,19 +33,19 @@ describe("dirty sheet planning", function() {
 
       , plan
 
-   origin.topology.containers[machine1Origin.id] = machine1Origin
-   origin.topology.containers[machine2.id] = machine2
+   origin.topology.containers[machine1.id] = machine1
+   origin.topology.containers[machine2Origin.id] = machine2Origin
    origin.topology.containers[machine3.id] = machine3
 
-   dest.topology.containers[machine1Dest.id] = machine1Dest
+   dest.topology.containers[machine1.id] = machine1
+   dest.topology.containers[machine2Dest.id] = machine2Dest
    dest.topology.containers[machine4.id] = machine4
-   dest.topology.containers[machine5.id] = machine5
 
-   plan = planner(origin, dest)
+   plan = planner(origin, dest, { mode: 'safe' })
 
-   expect(plan).to.eql([{
+   expected = [{
        cmd: "unlink"
-     , id: machine2.id
+     , id: machine2Origin.id
    }, {
        cmd: "unlink"
      , id: machine3.id
@@ -129,33 +56,23 @@ describe("dirty sheet planning", function() {
        cmd: "remove"
      , id: machine3.id
    }, {
-       cmd: "stop"
-     , id: machine2.id
-   }, {
-       cmd: "remove"
-     , id: machine2.id
-   }, {
        cmd: "add"
      , id: machine4.id
    }, {
        cmd: "start"
      , id: machine4.id
    }, {
-       cmd: "add"
-     , id: machine5.id
-   }, {
-       cmd: "start"
-     , id: machine5.id
-   }, {
-       cmd: "link"
-     , id: machine5.id
-   }, {
        cmd: "link"
      , id: machine4.id
-   }])
+   }, {
+       cmd: "link"
+     , id: machine2Dest.id
+   }]
+
+   expect(plan).to.eql(expected)
   })
 
-  it("should create a plan that moves a machine from an host to another", function() {
+  it.skip("should create a plan that moves a machine from an host to another", function() {
 
     var machine1Orig = defineMachine(amiDefinition)
 
@@ -210,7 +127,7 @@ describe("dirty sheet planning", function() {
    }])
   })
 
-  it("should work in a deep-first manner by default", function() {
+  it.skip("should work in a deep-first manner by default", function() {
 
     var machine1 = defineMachine(elbDefinition)
 
@@ -286,55 +203,6 @@ describe("dirty sheet planning", function() {
    }, {
        cmd: "link"
      , id: machine7.id
-   }])
-  })
-
-  it("should remove and start a container", function() {
-
-    var machine1 = defineMachine(elbDefinition)
-
-      , machine2Origin = defineMachine(amiDefinition, machine1)
-
-      , machine2Dest    = _.cloneDeep(machine2Origin)
-
-      , machine3 = defineMachine(dockDef, machine2Origin)
-
-      , machine4 = defineMachine(dockDef, machine2Dest)
-
-      , dest = buildSheet("full setup")
-
-      , origin = buildSheet("dirty sheet")
-
-      , plan
-
-   origin.topology.containers[machine1.id] = machine1
-   origin.topology.containers[machine2Origin.id] = machine2Origin
-   origin.topology.containers[machine3.id] = machine3
-
-   dest.topology.containers[machine1.id] = machine1
-   dest.topology.containers[machine2Dest.id] = machine2Dest
-   dest.topology.containers[machine4.id] = machine4
-
-   plan = planner(origin, dest)
-
-   expect(plan).to.eql([{
-       cmd: "unlink"
-     , id: machine3.id
-   }, {
-       cmd: "stop"
-     , id: machine3.id
-   }, {
-       cmd: "remove"
-     , id: machine3.id
-   }, {
-       cmd: "add"
-     , id: machine4.id
-   }, {
-       cmd: "start"
-     , id: machine4.id
-   }, {
-       cmd: "link"
-     , id: machine4.id
    }])
   })
 })
