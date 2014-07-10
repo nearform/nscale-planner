@@ -80,7 +80,7 @@ function generateCommands(origin, dest) {
   var destCmds    = _.chain(dest.topology.containers)
                      .values()
                      .filter(function(container) {
-                       return container.containedBy != container.id
+                       return container.containedBy === container.id || !container.containedBy
                      })
                      .map(function(container) {
                        return {
@@ -237,7 +237,7 @@ function generateDestTasks(planner, origin, dest, opts) {
     })
 
     if (opts.mode === 'safe') {
-      // TODO we should unlink the parent before doing anything
+      // we should unlink the parent before doing anything
       // and link back after
       allParentsIds(dest, container).forEach(function(id) {
 
@@ -312,14 +312,6 @@ function generateOriginTasks(planner, origin, opts) {
       , stopPrecondition = containerStatus(container, 'started')
       , removePrecondition = containerStatus(container, 'added')
 
-    if (container.contained) {
-      unlinkPreconditions = _.merge(unlinkPreconditions, containerStatus(container.contained, 'started'))
-      detachOp.subTasks.splice(1, 0, {
-          cmd: 'detach'
-        , id: container.contained
-      })
-    }
-
     container.contains.forEach(function(contained) {
       stopPrecondition = _.merge(stopPrecondition, containerStatus({ id: contained }, 'started'))
       detachOp.subTasks.splice(1, 0, {
@@ -373,6 +365,7 @@ function allParentsIds(context, container, parents) {
 
   parents = parents || []
 
+  // doing this before pushing skips the root
   if (!container.containedBy)
     return parents
 

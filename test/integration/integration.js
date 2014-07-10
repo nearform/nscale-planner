@@ -13,11 +13,12 @@ function read(name, type) {
 function test(name) {
 
   it("must plan correctly for " + name, function() {
-    var origin  = read(name, "origin")
-      , dest    = read(name, "dest")
-      , plan    = read(name, "plan")
+    var origin    = read(name, "origin")
+      , dest      = read(name, "dest")
+      , expected  = read(name, "plan")
+      , plan      = planner(origin, dest)
 
-    expect(planner(origin, dest)).to.eql(plan)
+    expect(plan).to.eql(expected)
   })
 }
 

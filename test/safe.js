@@ -72,13 +72,15 @@ describe("dirty sheet planning with safe mode", function() {
    expect(plan).to.eql(expected)
   })
 
-  it.skip("should create a plan that moves a machine from an host to another", function() {
+  it("should create a plan that moves a machine from an host to another, unlinking first", function() {
 
-    var machine1Orig = defineMachine(amiDefinition)
+    var machine0     = defineMachine(elbDefinition)
+
+      , machine1Orig = defineMachine(amiDefinition, machine0)
 
       , machine1Dest = _.cloneDeep(machine1Orig)
 
-      , machine2Orig = defineMachine(amiDefinition)
+      , machine2Orig = defineMachine(amiDefinition, machine0)
 
       , machine2Dest = _.cloneDeep(machine2Orig)
 
@@ -88,10 +90,13 @@ describe("dirty sheet planning with safe mode", function() {
 
       , dest = buildSheet("start and stop")
 
-      , plan
-
       , origin = buildSheet("dirty sheet")
 
+      , plan
+
+      , expected
+
+   origin.topology.containers[machine0.id] = machine0
    origin.topology.containers[machine1Orig.id] = machine1Orig
    origin.topology.containers[machine2Orig.id] = machine2Orig
    origin.topology.containers[machine3Orig.id] = machine3Orig
@@ -100,13 +105,17 @@ describe("dirty sheet planning with safe mode", function() {
    machine2Dest.contains.push(machine3Dest.id)
    machine1Dest.contains = []
 
+   dest.topology.containers[machine0.id] = machine0
    dest.topology.containers[machine1Dest.id] = machine1Dest
    dest.topology.containers[machine2Dest.id] = machine2Dest
    dest.topology.containers[machine3Dest.id] = machine3Dest
 
-   plan = planner(origin, dest)
+   plan = planner(origin, dest, { mode: "safe" })
 
-   expect(plan).to.eql([{
+   expected = [{
+       cmd: "unlink"
+     , id: machine1Orig.id
+   }, {
        cmd: "unlink"
      , id: machine3Orig.id
    }, {
@@ -116,6 +125,12 @@ describe("dirty sheet planning with safe mode", function() {
        cmd: "remove"
      , id: machine3Orig.id
    }, {
+       cmd: "link"
+     , id: machine1Orig.id
+   }, {
+       cmd: "unlink"
+     , id: machine2Dest.id
+   }, {
        cmd: "add"
      , id: machine3Orig.id
    }, {
@@ -124,7 +139,12 @@ describe("dirty sheet planning with safe mode", function() {
    }, {
        cmd: "link"
      , id: machine3Orig.id
-   }])
+   }, {
+       cmd: "link"
+     , id: machine2Dest.id
+   }]
+
+   expect(plan).to.eql(expected)
   })
 
   it.skip("should work in a deep-first manner by default", function() {
