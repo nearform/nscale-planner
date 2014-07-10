@@ -4,7 +4,8 @@ var TaskPlanner = require('taskplanner')
   , assert      = require('assert')
   , xtend       = require('xtend')
   , defaults    = {
-      mode: 'quick'
+        mode: 'quick'
+      , noLinkUnlinkRemove: false
     }
 
 function planner(origin, dest, opts)  {
@@ -17,12 +18,15 @@ function planner(origin, dest, opts)  {
 
     , skipNext  = false
 
+    , result
+
   opts = xtend(defaults, opts);
 
   assert(opts.mode === 'quick' || opts.mode === 'safe', 'unknown mode')
 
   tasks.addTask({ cmd: 'nop' }, {})
   generateOriginTasks(tasks, origin, opts)
+  generateOriginTasks(tasks, dest, opts) // needed because of safe mode
   generateDestTasks(tasks, origin, dest, opts)
 
   _.forIn(state.topology.containers, function(container) {
@@ -44,36 +48,40 @@ function planner(origin, dest, opts)  {
     }
   })
 
-
-  return cmds.reduce(function(acc, cmd) {
+  result = cmds.reduce(function(acc, cmd) {
     var plan = tasks.plan(state, cmd)
     if (!plan) throw new Error('unable to generate ' + cmd.cmd + ' for id ' + cmd.id)
     return acc.concat(plan)
   }, []).filter(function(cmd) {
     return cmd && cmd.cmd !== 'nop'
-  }).filter(function(cmd, i, cmds) {
+  })
 
-    if (skipNext) {
-      skipNext = false
-      return false
-    }
+  if (!opts.noLinkUnlinkRemove)
+    result = result.filter(function(cmd, i, cmds) {
 
-    if (!cmds[i + 1])
+      if (skipNext) {
+        skipNext = false
+        return false
+      }
+
+      if (!cmds[i + 1])
+        return true
+
+      if (cmds[i + 1].id !== cmd.id)
+        return true
+
+      var unlinkLink = (cmd.cmd === 'unlink' && cmds[i + 1].cmd === 'link')
+        , linkUnlink = (cmd.cmd === 'link' && cmds[i + 1].cmd === 'unlink')
+
+      if (linkUnlink || unlinkLink) {
+        skipNext = true
+        return false
+      }
+
       return true
+    })
 
-    if (cmds[i + 1].id !== cmd.id)
-      return true
-
-    var unlinkLink = (cmd.cmd === 'unlink' && cmds[i + 1].cmd === 'link')
-      , linkUnlink = (cmd.cmd === 'link' && cmds[i + 1].cmd === 'unlink')
-
-    if (linkUnlink || unlinkLink) {
-      skipNext = true
-      return false
-    }
-
-    return true
-  });
+  return result
 }
 
 function generateCommands(origin, dest) {
@@ -120,25 +128,33 @@ function containerStatus(original, status) {
           id: original.id
       }
 
-  switch(status) {
-    case 'detached':
-      container.added   = false
-      container.started = false
-      container.running = false
-      break
-    case 'added':
-      container.added   = true
-      break
-    case 'started':
-      container.started = true
-      break
-    case 'running':
-      container.running = true
-      break
+  if (typeof status === 'string')
 
-    default:
-      throw new Error('unknown state')
+    switch(status) {
+      case 'detached':
+        container.added   = false
+        container.started = false
+        container.running = false
+        break
+      case 'added':
+        container.added   = true
+        break
+      case 'started':
+        container.started = true
+        break
+      case 'running':
+        container.running = true
+        break
 
+      default:
+        throw new Error('unknown state')
+
+    }
+
+  else {
+    _.forIn(status, function(value, key) {
+      container[key] = value
+    })
   }
 
   state.topology.containers[container.id] = container
@@ -171,7 +187,7 @@ function generateDestTasks(planner, origin, dest, opts) {
         , subTasks: [{ cmd: 'nop' }]
         }
       , addPreconditions = containerStatus(container, 'detached')
-      , linkPreconditions = containerStatus(container, 'started')
+      , linkPreconditions = containerStatus(container, { started: true, running: false })
 
     // let's detach all 'old' containers
     if (origin.topology.containers[container.id]) {
@@ -194,10 +210,11 @@ function generateDestTasks(planner, origin, dest, opts) {
 
       if (opts.mode === 'safe') {
 
-        ops.unshift({
-            cmd: 'unlink'
-          , id: container.id
-        })
+        if (container.containedBy && container.containedBy !== container.id)
+          ops.unshift({
+              cmd: 'unlink'
+            , id: container.id
+          })
 
         allParentsIds(dest, container).forEach(function(id) {
           var op = configureOp
@@ -213,10 +230,11 @@ function generateDestTasks(planner, origin, dest, opts) {
           })
         });
 
-        ops.push({
-            cmd: 'link'
-          , id: container.id
-        })
+        if (container.containedBy && container.containedBy !== container.id)
+          ops.push({
+              cmd: 'link'
+            , id: container.id
+          })
       }
     }
 
@@ -278,12 +296,13 @@ function generateDestTasks(planner, origin, dest, opts) {
     })
 
     planner.addTask(linkSubTask, {
-        preconditions: linkPreconditions
-      , effects: containerStatus(container, 'running')
+        preconditions: containerStatus(container, 'running')
+      , subTasks: [{ cmd: 'nop' }]
     })
 
     planner.addTask(linkSubTask, {
-        preconditions: containerStatus(container, 'running')
+        preconditions: linkPreconditions
+      , effects: containerStatus(container, 'running')
     })
   })
 }
@@ -320,11 +339,6 @@ function generateOriginTasks(planner, origin, opts) {
       })
     })
 
-    if (opts.mode === 'safe') {
-      // TODO we should unlink the parent before doing anything
-      // and link back after
-    }
-
     planner.addTask({
         cmd: 'detach'
       , id: container.id
@@ -340,11 +354,11 @@ function generateOriginTasks(planner, origin, opts) {
 
     planner.addTask(unlinkSubTask, {
         preconditions: unlinkPreconditions
-      , effects: containerStatus(container, 'started')
+      , effects: containerStatus(container, { running: false })
     })
 
     planner.addTask(unlinkSubTask, {
-        preconditions: containerStatus(container, 'started')
+        preconditions: containerStatus(container, { running: false })
       , subTasks: [{ cmd: 'nop' }]
     })
 
@@ -353,9 +367,19 @@ function generateOriginTasks(planner, origin, opts) {
       , effects: containerStatus(container, 'added')
     })
 
+    planner.addTask(stopSubTask, {
+        preconditions: containerStatus(container, { running: false, started: false })
+      , subTasks: [{ cmd: 'nop' }]
+    })
+
     planner.addTask(removeSubTask, {
         preconditions: removePrecondition
       , effects: containerStatus(container, 'detached')
+    })
+
+    planner.addTask(removeSubTask, {
+        preconditions: containerStatus(container, 'detached')
+      , subTasks: [{ cmd: 'nop' }]
     })
   })
 }
@@ -366,14 +390,14 @@ function allParentsIds(context, container, parents) {
   parents = parents || []
 
   // doing this before pushing skips the root
-  if (!container.containedBy)
+  if (!container.containedBy || container.containedBy === container.id)
     return parents
 
   if (!isLeaf)
-    parents.push(container.id);
+    parents.push(container.id)
 
   // let's order them by tree order
-  return allParentsIds(context, context.topology.containers[container.containedBy], parents);
+  return allParentsIds(context, context.topology.containers[container.containedBy], parents)
 }
 
 module.exports = planner

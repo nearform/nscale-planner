@@ -41,7 +41,7 @@ describe("dirty sheet planning with safe mode", function() {
    dest.topology.containers[machine2Dest.id] = machine2Dest
    dest.topology.containers[machine4.id] = machine4
 
-   plan = planner(origin, dest, { mode: 'safe' })
+   plan = planner(origin, dest, { mode: 'safe', noLinkUnlinkRemove: true })
 
    expected = [{
        cmd: "unlink"
