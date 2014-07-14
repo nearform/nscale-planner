@@ -1,7 +1,7 @@
 
-var containerStatus = require('../lib/containerStatus')
+var containerStatus = require('../../lib/containerStatus')
   , expect          = require("must")
-  , fixture         = require("./fixture")
+  , fixture         = require("../fixture")
   , _               = require('lodash')
 
 describe('containerStatus helper', function() {

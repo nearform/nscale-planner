@@ -1,7 +1,7 @@
 
-var allParentsIds = require('../lib/allParentsIds')
+var allParentsIds = require('../../lib/allParentsIds')
   , expect  = require("must")
-  , fixture = require("./fixture")
+  , fixture = require("../fixture")
 
 describe('allParentsIds helper', function() {
   var elbDefinition = fixture.elbDefinition
