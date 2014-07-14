@@ -26,9 +26,9 @@ function planner(origin, dest, opts)  {
   assert(opts.mode === 'quick' || opts.mode === 'safe', 'unknown mode')
 
   tasks.addTask({ cmd: 'nop' }, {})
-  generateOriginTasks(tasks, origin, opts)
-  generateOriginTasks(tasks, dest, opts) // needed because of safe mode
-  generateDestTasks(tasks, origin, dest, opts)
+  generateDetachTasks(tasks, origin, opts)
+  generateDetachTasks(tasks, dest, opts) // needed because of safe mode
+  generateConfigureTasks(tasks, origin, dest, opts)
 
   _.forIn(state.topology.containers, function(container) {
     container.running = true
@@ -95,7 +95,7 @@ function generateCommands(origin, dest) {
   return destCmds.concat(originCmds)
 }
 
-function generateDestTasks(planner, origin, dest, opts) {
+function generateConfigureTasks(planner, origin, dest, opts) {
 
   _.forIn(dest.topology.containers, function(container) {
 
@@ -240,7 +240,7 @@ function generateDestTasks(planner, origin, dest, opts) {
   })
 }
 
-function generateOriginTasks(planner, origin, opts) {
+function generateDetachTasks(planner, origin, opts) {
 
   _.forIn(origin.topology.containers, function(container) {
 
