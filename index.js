@@ -1,11 +1,12 @@
 
-var TaskPlanner   = require('taskplanner')
-  , _             = require('lodash')
-  , assert        = require('assert')
-  , xtend         = require('xtend')
-  , allParentsIds = require('./lib/allParentsIds')
-  , linkFilter    = require('./lib/linkUnlinkFilter')
-  , defaults      = {
+var TaskPlanner     = require('taskplanner')
+  , _               = require('lodash')
+  , assert          = require('assert')
+  , xtend           = require('xtend')
+  , allParentsIds   = require('./lib/allParentsIds')
+  , linkFilter      = require('./lib/linkUnlinkFilter')
+  , containerStatus = require('./lib/containerStatus')
+  , defaults        = {
         mode: 'quick'
       , noLinkUnlinkRemove: false
     }
@@ -92,52 +93,6 @@ function generateCommands(origin, dest) {
                     .value()
 
   return destCmds.concat(originCmds)
-}
-
-function containerStatus(original, status) {
-
-  var state = {
-          topology: {
-              containers: {}
-          }
-      }
-
-    , container = {
-          id: original.id
-      }
-
-  if (typeof status === 'string')
-
-    switch(status) {
-      case 'detached':
-        container.added   = false
-        container.started = false
-        container.running = false
-        break
-      case 'added':
-        container.added   = true
-        break
-      case 'started':
-        container.started = true
-        break
-      case 'running':
-        container.running = true
-        break
-
-      default:
-        throw new Error('unknown state')
-
-    }
-
-  else {
-    _.forIn(status, function(value, key) {
-      container[key] = value
-    })
-  }
-
-  state.topology.containers[container.id] = container
-
-  return state
 }
 
 function generateDestTasks(planner, origin, dest, opts) {
