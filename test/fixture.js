@@ -49,8 +49,13 @@ function buildSheet(name) {
   }
 }
 
-module.exports.elbDefinition = elbDefinition
-module.exports.amiDefinition = amiDefinition
+function addToSheet(sheet, container) {
+  sheet.topology.containers[container.id] = container
+}
+
+module.exports.elbDefinition    = elbDefinition
+module.exports.amiDefinition    = amiDefinition
 module.exports.dockerDefinition = dockerDefinition
-module.exports.defineMachine = defineMachine
-module.exports.buildSheet = buildSheet
+module.exports.defineMachine    = defineMachine
+module.exports.buildSheet       = buildSheet
+module.exports.addToSheet       = addToSheet

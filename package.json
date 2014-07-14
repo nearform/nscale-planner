@@ -16,8 +16,9 @@
     "pre-commit": "0.0.7"
   },
   "dependencies": {
-    "uuid": "~1.4.1",
+    "lodash": "~2.4.1",
     "taskplanner": "0.0.2",
-    "lodash": "~2.4.1"
+    "uuid": "~1.4.1",
+    "xtend": "^3.0.0"
   }
 }

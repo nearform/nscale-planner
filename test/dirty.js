@@ -288,4 +288,53 @@ describe("dirty sheet planning", function() {
      , id: machine7.id
    }])
   })
+
+  it("should remove and start a container", function() {
+
+    var machine1 = defineMachine(elbDefinition)
+
+      , machine2Origin = defineMachine(amiDefinition, machine1)
+
+      , machine2Dest    = _.cloneDeep(machine2Origin)
+
+      , machine3 = defineMachine(dockDef, machine2Origin)
+
+      , machine4 = defineMachine(dockDef, machine2Dest)
+
+      , dest = buildSheet("full setup")
+
+      , origin = buildSheet("dirty sheet")
+
+      , plan
+
+   origin.topology.containers[machine1.id] = machine1
+   origin.topology.containers[machine2Origin.id] = machine2Origin
+   origin.topology.containers[machine3.id] = machine3
+
+   dest.topology.containers[machine1.id] = machine1
+   dest.topology.containers[machine2Dest.id] = machine2Dest
+   dest.topology.containers[machine4.id] = machine4
+
+   plan = planner(origin, dest)
+
+   expect(plan).to.eql([{
+       cmd: "unlink"
+     , id: machine3.id
+   }, {
+       cmd: "stop"
+     , id: machine3.id
+   }, {
+       cmd: "remove"
+     , id: machine3.id
+   }, {
+       cmd: "add"
+     , id: machine4.id
+   }, {
+       cmd: "start"
+     , id: machine4.id
+   }, {
+       cmd: "link"
+     , id: machine4.id
+   }])
+  })
 })

@@ -10,17 +10,37 @@ function read(name, type) {
   return JSON.parse(fs.readFileSync(toRead));
 }
 
-function test(name) {
+function _test(name, opts) {
+  var origin    = read(name, "origin")
+    , dest      = read(name, "dest")
+    , expected  = read(name, "plan")
+    , plan      = planner(origin, dest, opts)
 
-  it("must plan correctly for " + name, function() {
-    var origin  = read(name, "origin")
-      , dest    = read(name, "dest")
-      , plan    = read(name, "plan")
+  expect(plan).to.eql(expected)
+}
 
-    expect(planner(origin, dest)).to.eql(plan)
-  })
+function _title(name, opts) {
+  var title = "must plan correctly for " + name
+
+  if (opts && opts.mode)
+    title += " with " + opts.mode + " mode"
+
+  return title
+}
+
+function test(name, opts) {
+  it(_title(name, opts), _test.bind(null, name, opts))
+}
+
+test.only = function(name, opts) {
+  it.only(_title(name, opts), _test.bind(null, name, opts))
+}
+
+test.skip = function(name, opts) {
+  it.skip(_title(name, opts), _test.bind(null, name, opts))
 }
 
 describe("integration tests", function() {
   test("oj3")
+  test("oj3", { mode: 'safe' })
 })

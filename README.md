@@ -62,3 +62,15 @@ docker instances.
 See examples/dirty.js for an example that spin up an AMI with a new
 docker instance within an ELB.
 docker instances.
+
+### Safe deployment
+
+The default mode of planning is `'quick'`, which means that the
+parent is not _unlinked_ before operating. This is quicker than `'safe'`
+mode that _unlink_ the parent before operating, i.e. it removes an AMI
+instance from the ELB. Usage:
+
+```js
+planner(origin, dest, { mode: 'safe' })
+```
+
