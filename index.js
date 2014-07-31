@@ -42,6 +42,7 @@ function planner(origin, dest, opts)  {
     if (!containers[container.id]) {
       containers[container.id] = {
           id: container.id
+        , containedBy: container.containedBy
         , running: false
         , started: false
         , added: false
@@ -121,11 +122,13 @@ function generateConfigureTasks(planner, origin, dest, opts) {
         }
       , addPreconditions = containerStatus(container, 'detached')
       , linkPreconditions = containerStatus(container, { started: true, running: false })
+      , oldContainer = origin.topology.containers[container.id]
 
-    // let's detach all 'old' containers
-    if (origin.topology.containers[container.id]) {
-      var ops = origin.topology.containers[container.id].contains.filter(function(contained) {
-        return container.contains.indexOf(contained) === -1
+    if (oldContainer) {
+
+      // let's detach all removed containers
+      var ops = oldContainer.contains.filter(function(contained) {
+        return container.contains.indexOf(contained) === -1 && !dest.topology.containers[contained]
       }).map(function(contained) {
         // the current contained is NOT included in the dest status
         // so we detach it
@@ -136,7 +139,6 @@ function generateConfigureTasks(planner, origin, dest, opts) {
       })
 
       if (ops.length > 0) {
-
         // we add it only top the nop tasks because it is already there
         configureNop.subTasks = ops
       }
@@ -173,8 +175,25 @@ function generateConfigureTasks(planner, origin, dest, opts) {
 
     // the children container must be configured before linking
     container.contains.forEach(function(contained) {
-      linkPreconditions = _.merge(linkPreconditions, containerStatus({ id: contained }, 'running'))
-      // we need ot add those before the link
+      var oldContained = origin.topology.containers[contained]
+
+      linkPreconditions = _.merge(linkPreconditions, containerStatus({
+          id: contained
+        , containedBy: container.id
+      }, 'running'))
+      // we need to add those before the link
+
+      if (oldContained && oldContained.containedBy !== container.id) {
+        configureOp.subTasks.splice(configureOp.subTasks.length - 1, 0, {
+            cmd: 'detach'
+          , id: contained
+        })
+
+        configureNop.subTasks.push({
+            cmd: 'detach'
+          , id: contained
+        })
+      }
 
       configureOp.subTasks.splice(configureOp.subTasks.length - 1, 0, {
           cmd: 'configure'
@@ -307,7 +326,7 @@ function generateDetachTasks(planner, origin, opts) {
 
     planner.addTask(removeSubTask, {
         preconditions: removePrecondition
-      , effects: containerStatus(container, 'detached')
+      , effects: containerStatus(container, 'detached', null)
     })
 
     planner.addTask(removeSubTask, {

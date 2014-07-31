@@ -20,10 +20,11 @@ var uuid = require("uuid")
     }
 
 function defineMachine(definition, containedBy) {
-  var result = {
-      "id": uuid.v1()
+  var id      = uuid.v1()
+    , result  = {
+      "id": id
     , "containerDefinitionId": amiDefinition.id
-    , "containedBy": (containedBy || {}).id
+    , "containedBy": containedBy && containedBy.id || id
     , "contains": []
     , "specific": {
           "ipaddress": "10.74.143.152"

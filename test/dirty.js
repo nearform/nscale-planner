@@ -210,6 +210,63 @@ describe("dirty sheet planning", function() {
    }])
   })
 
+  it("should create a plan that moves a machine from an host to another (reversed)", function() {
+
+    var machine1Orig = defineMachine(amiDefinition)
+
+      , machine1Dest = _.cloneDeep(machine1Orig)
+
+      , machine2Orig = defineMachine(amiDefinition)
+
+      , machine2Dest = _.cloneDeep(machine2Orig)
+
+      , machine3Orig = defineMachine(dockDef, machine2Orig)
+
+      , machine3Dest = _.cloneDeep(machine3Orig)
+
+      , dest = buildSheet("start and stop")
+
+      , plan
+
+      , origin = buildSheet("dirty sheet")
+
+   origin.topology.containers[machine1Orig.id] = machine1Orig
+   origin.topology.containers[machine2Orig.id] = machine2Orig
+   origin.topology.containers[machine3Orig.id] = machine3Orig
+
+   machine3Dest.containedBy = machine1Dest.id
+   machine1Dest.contains.push(machine3Dest.id)
+   machine2Dest.contains = []
+
+   dest.topology.containers[machine1Dest.id] = machine1Dest
+   dest.topology.containers[machine2Dest.id] = machine2Dest
+   dest.topology.containers[machine3Dest.id] = machine3Dest
+
+   console.log(JSON.stringify(dest, null, 2))
+
+   plan = planner(origin, dest)
+
+   expect(plan).to.eql([{
+       cmd: "unlink"
+     , id: machine3Orig.id
+   }, {
+       cmd: "stop"
+     , id: machine3Orig.id
+   }, {
+       cmd: "remove"
+     , id: machine3Orig.id
+   }, {
+       cmd: "add"
+     , id: machine3Orig.id
+   }, {
+       cmd: "start"
+     , id: machine3Orig.id
+   }, {
+       cmd: "link"
+     , id: machine3Orig.id
+   }])
+  })
+
   it("should work in a deep-first manner by default", function() {
 
     var machine1 = defineMachine(elbDefinition)

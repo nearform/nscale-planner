@@ -32,6 +32,7 @@ describe('containerStatus helper', function() {
 
         expected.topology.containers[mac1.id] = state
         expected.topology.containers[mac1.id].id = mac1.id
+        state.containedBy = mac1.containedBy
 
         expect(result).to.eql(expected)
       })
@@ -70,6 +71,10 @@ describe('containerStatus helper', function() {
 
           expected.topology.containers[mac1.id] = state
           expected.topology.containers[mac1.id].id = mac1.id
+
+          if (state.added !== false) {
+            state.containedBy = mac1.containedBy
+          }
 
           expect(result).to.eql(expected)
         })

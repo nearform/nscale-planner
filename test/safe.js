@@ -5,7 +5,7 @@ var planner = require("../")
   , _       = require("lodash")
   , fixture = require("./fixture")
 
-describe("dirty sheet planning with safe mode", function() {
+describe.skip("dirty sheet planning with safe mode", function() {
 
   var instance
 
