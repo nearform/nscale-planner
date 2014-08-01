@@ -16,9 +16,6 @@ function _test(name, opts) {
     , expected  = read(name, (opts && opts.mode || "") + "plan")
     , plan      = planner(origin, dest, opts)
 
-  console.log('expected', JSON.stringify(expected, null, 2))
-  console.log('actual', JSON.stringify(plan, null, 2))
-
   expect(plan).to.eql(expected)
 }
 

@@ -242,8 +242,6 @@ describe("dirty sheet planning", function() {
    dest.topology.containers[machine2Dest.id] = machine2Dest
    dest.topology.containers[machine3Dest.id] = machine3Dest
 
-   console.log(JSON.stringify(dest, null, 2))
-
    plan = planner(origin, dest)
 
    expect(plan).to.eql([{

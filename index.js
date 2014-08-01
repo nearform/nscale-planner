@@ -246,8 +246,6 @@ function generateConfigureTasks(planner, origin, dest, opts) {
         preconditions: linkPreconditions
       , effects: containerStatus(container, 'running')
     })
-
-    console.log(container.id, configureNop.subTasks)
   })
 }
 

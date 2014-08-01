@@ -44,8 +44,6 @@ describe("dirty sheet planning with safe mode", function() {
 
    plan = planner(origin, dest, { mode: 'safe' })
 
-   console.log(JSON.stringify(plan, null, 2))
-
    expected = [{
        cmd: "unlink"
      , id: machine2Origin.id
