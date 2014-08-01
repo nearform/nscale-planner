@@ -41,7 +41,7 @@ test.skip = function(name, opts) {
 }
 
 describe("integration tests", function() {
-  test.skip("oj3")
+  test("oj3")
   test.skip("oj3", { mode: 'safe' })
   test("dc")
 })
