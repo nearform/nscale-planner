@@ -5,7 +5,7 @@ var planner = require("../")
   , _       = require("lodash")
   , fixture = require("./fixture")
 
-describe.skip("dirty sheet planning with safe mode", function() {
+describe("dirty sheet planning with safe mode", function() {
 
   var instance
 
@@ -114,6 +114,9 @@ describe.skip("dirty sheet planning with safe mode", function() {
 
    expected = [{
        cmd: "unlink"
+     , id: machine2Dest.id
+   }, {
+       cmd: "unlink"
      , id: machine1Orig.id
    }, {
        cmd: "unlink"
@@ -127,9 +130,6 @@ describe.skip("dirty sheet planning with safe mode", function() {
    }, {
        cmd: "link"
      , id: machine1Orig.id
-   }, {
-       cmd: "unlink"
-     , id: machine2Dest.id
    }, {
        cmd: "add"
      , id: machine3Orig.id

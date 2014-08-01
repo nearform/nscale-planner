@@ -39,6 +39,7 @@ function defineMachine(definition, containedBy) {
 }
 
 function buildSheet(name) {
+  name = name || "sheet"
   return {
       "name": name
     , "namespace": name

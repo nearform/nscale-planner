@@ -124,10 +124,9 @@ function generateConfigureTasks(planner, origin, dest, opts) {
       , linkPreconditions = containerStatus(container, { started: true, running: false })
       , oldContainer = origin.topology.containers[container.id]
 
-    if (oldContainer) {
-
+    if (oldContainer)
       // let's detach all removed containers
-      var ops = oldContainer.contains.filter(function(contained) {
+      oldContainer.contains.filter(function(contained) {
         return container.contains.indexOf(contained) === -1 && !dest.topology.containers[contained]
       }).map(function(contained) {
         // the current contained is NOT included in the dest status
@@ -136,42 +135,10 @@ function generateConfigureTasks(planner, origin, dest, opts) {
             cmd: 'detach'
           , id: contained
         }
-      })
-
-      if (ops.length > 0) {
-        // we add it only top the nop tasks because it is already there
-        configureNop.subTasks = ops
-      }
-
-      if (opts.mode === 'safe') {
-
-        if (container.containedBy && container.containedBy !== container.id)
-          ops.unshift({
-              cmd: 'unlink'
-            , id: container.id
-          })
-
-        allParentsIds(dest, container).forEach(function(id) {
-          var op = configureOp
-
-          ops.unshift({
-              cmd: 'unlink'
-            , id: id
-          })
-
-          ops.push({
-              cmd: 'link'
-            , id: id
-          })
-        });
-
-        if (container.containedBy && container.containedBy !== container.id)
-          ops.push({
-              cmd: 'link'
-            , id: container.id
-          })
-      }
-    }
+      }).reduce(function(list, op) {
+        list.push(op)
+        return list
+      }, configureNop.subTasks)
 
     // the children container must be configured before linking
     container.contains.forEach(function(contained) {
@@ -207,13 +174,25 @@ function generateConfigureTasks(planner, origin, dest, opts) {
     })
 
     if (opts.mode === 'safe') {
+      if (oldContainer && container.containedBy !== container.id)
+        configureNop.subTasks.unshift({
+            cmd: 'unlink'
+          , id: container.id
+        })
+
       // we should unlink the parent before doing anything
       // and link back after
       allParentsIds(dest, container).forEach(function(id) {
 
         var op = configureOp
+        var nop = configureNop
 
         op.subTasks.unshift({
+            cmd: 'unlink'
+          , id: id
+        })
+
+        nop.subTasks.unshift({
             cmd: 'unlink'
           , id: id
         })
@@ -222,7 +201,18 @@ function generateConfigureTasks(planner, origin, dest, opts) {
             cmd: 'link'
           , id: id
         })
+
+        nop.subTasks.push({
+            cmd: 'link'
+          , id: id
+        })
       });
+
+      if (oldContainer && container.containedBy !== container.id)
+        configureNop.subTasks.push({
+            cmd: 'link'
+          , id: container.id
+        })
     }
 
     // if a container is already running, there is nothing to do
@@ -282,6 +272,20 @@ function generateDetachTasks(planner, origin, opts) {
       , unlinkPreconditions = containerStatus(container, 'running')
       , stopPrecondition = containerStatus(container, 'started')
       , removePrecondition = containerStatus(container, 'added')
+      , oldContainer = origin.topology.containers[container.id]
+
+    if (opts.mode === 'safe') {
+      allParentsIds(origin, container).forEach(function(id) {
+        detachOp.subTasks.unshift({
+            cmd: 'unlink'
+          , id: id
+        })
+        detachOp.subTasks.push({
+            cmd: 'link'
+          , id: id
+        })
+      })
+    }
 
     container.contains.forEach(function(contained) {
       stopPrecondition = _.merge(stopPrecondition, containerStatus({ id: contained }, 'started'))

@@ -13,7 +13,7 @@ describe('allParentsIds helper', function() {
 
   it('should not find any parent on a root machine', function() {
     var machine1    = defineMachine(amiDefinition)
-      , sheet       = buildSheet("start inside another")
+      , sheet       = buildSheet()
 
     add(sheet, machine1)
     expect(allParentsIds(sheet, machine1)).to.eql([])
@@ -22,7 +22,7 @@ describe('allParentsIds helper', function() {
   it('should exclude the root machine', function() {
     var root        = defineMachine(elbDefinition)
       , machine1    = defineMachine(amiDefinition, root)
-      , sheet       = buildSheet("start inside another")
+      , sheet       = buildSheet()
 
     add(sheet, machine1)
     add(sheet, root)
@@ -33,7 +33,7 @@ describe('allParentsIds helper', function() {
     var root        = defineMachine(elbDefinition)
       , machine1    = defineMachine(amiDefinition, root)
       , machine2    = defineMachine(dockDef, machine1)
-      , sheet       = buildSheet("start inside another")
+      , sheet       = buildSheet()
 
     add(sheet, root)
     add(sheet, machine1)
