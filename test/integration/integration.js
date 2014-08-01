@@ -13,8 +13,11 @@ function read(name, type) {
 function _test(name, opts) {
   var origin    = read(name, "origin")
     , dest      = read(name, "dest")
-    , expected  = read(name, "plan")
+    , expected  = read(name, (opts && opts.mode || "") + "plan")
     , plan      = planner(origin, dest, opts)
+
+  console.log('expected', JSON.stringify(expected, null, 2))
+  console.log('actual', JSON.stringify(plan, null, 2))
 
   expect(plan).to.eql(expected)
 }
@@ -42,6 +45,6 @@ test.skip = function(name, opts) {
 
 describe("integration tests", function() {
   test("oj3")
-  test.skip("oj3", { mode: 'safe' })
+  test("oj3", { mode: 'safe' })
   test("dc")
 })

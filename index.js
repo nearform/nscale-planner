@@ -173,16 +173,10 @@ function generateConfigureTasks(planner, origin, dest, opts) {
       })
     })
 
-    if (opts.mode === 'safe') {
-      if (oldContainer && container.containedBy !== container.id)
-        configureNop.subTasks.unshift({
-            cmd: 'unlink'
-          , id: container.id
-        })
-
+    if (opts.mode === 'safe' && oldContainer && oldContainer.containedBy != container.containedBy) {
       // we should unlink the parent before doing anything
       // and link back after
-      allParentsIds(dest, container).forEach(function(id) {
+      allParentsIds(origin, container).forEach(function(id) {
 
         var op = configureOp
         var nop = configureNop
@@ -207,12 +201,18 @@ function generateConfigureTasks(planner, origin, dest, opts) {
           , id: id
         })
       });
+    }
 
-      if (oldContainer && container.containedBy !== container.id)
-        configureNop.subTasks.push({
-            cmd: 'link'
-          , id: container.id
-        })
+    if (opts.mode === 'safe' && configureNop.subTasks.length > 1 && container.containedBy !== container.id) {
+      configureNop.subTasks.unshift({
+          cmd: 'unlink'
+        , id: container.id
+      })
+
+      configureNop.subTasks.push({
+          cmd: 'link'
+        , id: container.id
+      })
     }
 
     // if a container is already running, there is nothing to do
@@ -246,6 +246,8 @@ function generateConfigureTasks(planner, origin, dest, opts) {
         preconditions: linkPreconditions
       , effects: containerStatus(container, 'running')
     })
+
+    console.log(container.id, configureNop.subTasks)
   })
 }
 
@@ -274,6 +276,14 @@ function generateDetachTasks(planner, origin, opts) {
       , removePrecondition = containerStatus(container, 'added')
       , oldContainer = origin.topology.containers[container.id]
 
+    container.contains.forEach(function(contained) {
+      stopPrecondition = _.merge(stopPrecondition, containerStatus({ id: contained }, 'started'))
+      detachOp.subTasks.splice(1, 0, {
+          cmd: 'detach'
+        , id: contained
+      })
+    })
+
     if (opts.mode === 'safe') {
       allParentsIds(origin, container).forEach(function(id) {
         detachOp.subTasks.unshift({
@@ -286,14 +296,6 @@ function generateDetachTasks(planner, origin, opts) {
         })
       })
     }
-
-    container.contains.forEach(function(contained) {
-      stopPrecondition = _.merge(stopPrecondition, containerStatus({ id: contained }, 'started'))
-      detachOp.subTasks.splice(1, 0, {
-          cmd: 'detach'
-        , id: contained
-      })
-    })
 
     planner.addTask({
         cmd: 'detach'
@@ -330,7 +332,7 @@ function generateDetachTasks(planner, origin, opts) {
 
     planner.addTask(removeSubTask, {
         preconditions: removePrecondition
-      , effects: containerStatus(container, 'detached', null)
+      , effects: containerStatus(container, 'detached')
     })
 
     planner.addTask(removeSubTask, {

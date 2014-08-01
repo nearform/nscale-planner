@@ -32,6 +32,7 @@ describe("dirty sheet planning with safe mode", function() {
       , origin = buildSheet("dirty sheet")
 
       , plan
+      , expected
 
    origin.topology.containers[machine1.id] = machine1
    origin.topology.containers[machine2Origin.id] = machine2Origin
@@ -42,6 +43,8 @@ describe("dirty sheet planning with safe mode", function() {
    dest.topology.containers[machine4.id] = machine4
 
    plan = planner(origin, dest, { mode: 'safe' })
+
+   console.log(JSON.stringify(plan, null, 2))
 
    expected = [{
        cmd: "unlink"

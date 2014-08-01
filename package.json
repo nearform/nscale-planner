@@ -5,14 +5,14 @@
   "main": "index.js",
   "private": true,
   "scripts": {
-    "test": "mocha --bail test/*"
+    "test": "mocha --bail test/* 2>&1"
   },
   "pre-commit": "test",
   "author": "Matteo Collina <matteo.collina@nearform.com>",
   "license": "private",
   "devDependencies": {
     "must": "~0.11.0",
-    "mocha": "~1.19.0",
+    "mocha": "~1.21.3",
     "pre-commit": "0.0.7"
   },
   "dependencies": {
