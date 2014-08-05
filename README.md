@@ -39,6 +39,8 @@ var  amiDefinition = {
         }
     }
 
+machine.containedBy = machine.id
+
 dest.topology.containers[machine.id] = machine
 
 console.log(planner(origin, dest))
