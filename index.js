@@ -89,7 +89,7 @@ function generateCommands(origin, dest) {
 
                        return null
                      }).filter(function(container) {
-                       return container != null;
+                       return container !== null;
                      })
                     .value()
 
@@ -272,7 +272,6 @@ function generateDetachTasks(planner, origin, opts) {
       , unlinkPreconditions = containerStatus(container, 'running')
       , stopPrecondition = containerStatus(container, 'started')
       , removePrecondition = containerStatus(container, 'added')
-      , oldContainer = origin.topology.containers[container.id]
 
     container.contains.forEach(function(contained) {
       stopPrecondition = _.merge(stopPrecondition, containerStatus({ id: contained }, 'started'))

@@ -5,9 +5,10 @@
   "main": "index.js",
   "private": true,
   "scripts": {
+    "jshint": "jshint --exclude node_modules index.js lib test",
     "test": "mocha --bail test/* 2>&1"
   },
-  "pre-commit": "test",
+  "pre-commit": ["jshint", "test"],
   "author": "Matteo Collina <matteo.collina@nearform.com>",
   "license": "private",
   "devDependencies": {

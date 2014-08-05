@@ -1,16 +1,12 @@
 
 var planner = require("../")
   , expect  = require("must")
-  , uuid    = require("uuid")
   , _       = require("lodash")
   , fixture = require("./fixture")
 
 describe("shutdown planning", function() {
 
-  var instance
-
-    , elbDefinition = fixture.elbDefinition
-    , amiDefinition = fixture.amiDefinition
+  var amiDefinition = fixture.amiDefinition
     , dockDef       = fixture.dockerDefinition
     , defineMachine = fixture.defineMachine
     , buildSheet    = fixture.buildSheet

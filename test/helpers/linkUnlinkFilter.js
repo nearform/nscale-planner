@@ -1,7 +1,6 @@
 
 var linkFilter    = require('../../lib/linkUnlinkFilter')
   , expect        = require("must")
-  , fixture       = require("../fixture")
 
 describe('filter couples of link/unlink and unlink/link', function() {
 

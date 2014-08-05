@@ -1,14 +1,11 @@
 
 var planner = require("../")
   , expect  = require("must")
-  , uuid    = require("uuid")
   , fixture = require("./fixture")
 
 describe("white sheet planning", function() {
 
-  var instance
-
-    , elbDefinition = fixture.elbDefinition
+  var elbDefinition = fixture.elbDefinition
     , amiDefinition = fixture.amiDefinition
     , dockDef       = fixture.dockerDefinition
     , defineMachine = fixture.defineMachine
