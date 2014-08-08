@@ -1,47 +1,50 @@
-var planner = require("../../")
-  , expect  = require("must")
-  , fs      = require("fs")
-  , path    = require("path")
-  , base    = path.join(__dirname, "data")
+'use strict';
+
+var planner = require('../../');
+var expect  = require('must');
+var fs      = require('fs');
+var path    = require('path');
+var base    = path.join(__dirname, 'data');
 
 function read(name, type) {
-  var toRead = path.join(base, name + "." + type + ".json");
+  var toRead = path.join(base, name + '.' + type + '.json');
 
   return JSON.parse(fs.readFileSync(toRead));
 }
 
 function _test(name, opts) {
-  var origin    = read(name, "origin")
-    , dest      = read(name, "dest")
-    , expected  = read(name, (opts && opts.mode || "") + "plan")
-    , plan      = planner(origin, dest, opts)
+  var origin    = read(name, 'origin');
+  var dest      = read(name, 'dest');
+  var expected  = read(name, (opts && opts.mode || '') + 'plan');
+  var plan      = planner(origin, dest, opts);
 
-  expect(plan).to.eql(expected)
+  expect(plan).to.eql(expected);
 }
 
 function _title(name, opts) {
-  var title = "must plan correctly for " + name
+  var title = 'must plan correctly for ' + name;
 
-  if (opts && opts.mode)
-    title += " with " + opts.mode + " mode"
+  if (opts && opts.mode) {
+    title += ' with ' + opts.mode + ' mode';
+  }
 
-  return title
+  return title;
 }
 
 function test(name, opts) {
-  it(_title(name, opts), _test.bind(null, name, opts))
+  it(_title(name, opts), _test.bind(null, name, opts));
 }
 
 test.only = function(name, opts) {
-  it.only(_title(name, opts), _test.bind(null, name, opts))
-}
+  it.only(_title(name, opts), _test.bind(null, name, opts));
+};
 
 test.skip = function(name, opts) {
-  it.skip(_title(name, opts), _test.bind(null, name, opts))
-}
+  it.skip(_title(name, opts), _test.bind(null, name, opts));
+};
 
-describe("integration tests", function() {
-  test("oj3")
-  test("oj3", { mode: 'safe' })
-  test("dc")
-})
+describe('integration tests', function() {
+  test('oj3');
+  test('oj3', { mode: 'safe' });
+  test('dc');
+});

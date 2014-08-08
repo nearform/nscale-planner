@@ -1,80 +1,73 @@
 
-var planner = require("../")
-  , expect  = require("must")
-  , _       = require("lodash")
-  , fixture = require("./fixture")
+'use strict';
 
-describe("shutdown planning", function() {
+var planner = require('../');
+var expect  = require('must');
+var _       = require('lodash');
+var fixture = require('./fixture');
 
-  var amiDefinition = fixture.amiDefinition
-    , dockDef       = fixture.dockerDefinition
-    , defineMachine = fixture.defineMachine
-    , buildSheet    = fixture.buildSheet
+describe('shutdown planning', function() {
 
-    , origin = buildSheet("shudown planning")
+  var amiDefinition = fixture.amiDefinition;
+  var dockDef       = fixture.dockerDefinition;
+  var defineMachine = fixture.defineMachine;
+  var buildSheet    = fixture.buildSheet;
+  var origin        = buildSheet('shudown planning');
 
-  it("should create a plan that stops a machine", function() {
+  it('should create a plan that stops a machine', function() {
 
-    var machine1 = defineMachine(amiDefinition)
+    var machine1  = defineMachine(amiDefinition);
+    var dest      = buildSheet('single instance');
+    var currOrig  = _.cloneDeep(origin);
+    var plan;
 
-      , dest = buildSheet("single instance")
+    currOrig.topology.containers[machine1.id] = machine1;
 
-      , plan
+    plan = planner(currOrig, dest);
 
-      , currOrig = _.cloneDeep(origin)
+    expect(plan).to.eql([{
+      cmd: 'unlink',
+      id: machine1.id
+    }, {
+      cmd: 'stop',
+      id: machine1.id
+    }, {
+      cmd: 'remove',
+      id: machine1.id
+    }]);
+  });
 
+  it('should create a plan that stops two machines, one inside another', function() {
 
-   currOrig.topology.containers[machine1.id] = machine1
+    var machine1  = defineMachine(amiDefinition);
+    var machine2  = defineMachine(dockDef, machine1);
+    var dest      = buildSheet('basic container');
+    var currOrig  = _.cloneDeep(origin);
+    var plan;
 
-   plan = planner(currOrig, dest)
+    currOrig.topology.containers[machine1.id] = machine1;
+    currOrig.topology.containers[machine2.id] = machine2;
 
-   expect(plan).to.eql([{
-       cmd: "unlink"
-     , id: machine1.id
-   }, {
-       cmd: "stop"
-     , id: machine1.id
-   }, {
-       cmd: "remove"
-     , id: machine1.id
-   }])
-  })
+    plan = planner(currOrig, dest);
 
-  it("should create a plan that stops two machines, one inside another", function() {
-
-    var machine1 = defineMachine(amiDefinition)
-
-      , machine2 = defineMachine(dockDef, machine1)
-
-      , dest = buildSheet("basic container")
-
-      , currOrig = _.cloneDeep(origin)
-
-      , plan
-
-   currOrig.topology.containers[machine1.id] = machine1
-   currOrig.topology.containers[machine2.id] = machine2
-
-   plan = planner(currOrig, dest)
-
-   expect(plan).to.eql([{
-       cmd: "unlink"
-     , id: machine1.id
-   }, {
-       cmd: "unlink"
-     , id: machine2.id
-   }, {
-       cmd: "stop"
-     , id: machine2.id
-   }, {
-       cmd: "remove"
-     , id: machine2.id
-   }, {
-       cmd: "stop"
-     , id: machine1.id
-   }, {
-       cmd: "remove"
-     , id: machine1.id
-   }])
-  })
-})
+    expect(plan).to.eql([{
+      cmd: 'unlink',
+      id: machine1.id
+    }, {
+      cmd: 'unlink',
+      id: machine2.id
+    }, {
+      cmd: 'stop',
+      id: machine2.id
+    }, {
+      cmd: 'remove',
+      id: machine2.id
+    }, {
+      cmd: 'stop',
+      id: machine1.id
+    }, {
+      cmd: 'remove',
+      id: machine1.id
+    }]);
+  });
+});
