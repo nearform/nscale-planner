@@ -27,13 +27,16 @@ describe('shutdown planning', function() {
 
     expect(plan).to.eql([{
       cmd: 'unlink',
-      id: machine1.id
+      id: machine1.id,
+      parent: machine1.id
     }, {
       cmd: 'stop',
-      id: machine1.id
+      id: machine1.id,
+      parent: machine1.id
     }, {
       cmd: 'remove',
-      id: machine1.id
+      id: machine1.id,
+      parent: machine1.id
     }]);
   });
 
@@ -52,22 +55,28 @@ describe('shutdown planning', function() {
 
     expect(plan).to.eql([{
       cmd: 'unlink',
-      id: machine1.id
+      id: machine1.id,
+      parent: machine1.id
     }, {
       cmd: 'unlink',
-      id: machine2.id
+      id: machine2.id,
+      parent: machine1.id
     }, {
       cmd: 'stop',
-      id: machine2.id
+      id: machine2.id,
+      parent: machine1.id
     }, {
       cmd: 'remove',
-      id: machine2.id
+      id: machine2.id,
+      parent: machine1.id
     }, {
       cmd: 'stop',
-      id: machine1.id
+      id: machine1.id,
+      parent: machine1.id
     }, {
       cmd: 'remove',
-      id: machine1.id
+      id: machine1.id,
+      parent: machine1.id
     }]);
   });
 });

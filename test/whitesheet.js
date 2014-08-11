@@ -26,13 +26,16 @@ describe('white sheet planning', function() {
 
     expect(plan).to.eql([{
       cmd: 'add',
-      id: machine.id
+      id: machine.id,
+      parent: machine.id
     }, {
       cmd: 'start',
-      id: machine.id
+      id: machine.id,
+      parent: machine.id
     }, {
       cmd: 'link',
-      id: machine.id
+      id: machine.id,
+      parent: machine.id
     }]);
   });
 
@@ -50,22 +53,28 @@ describe('white sheet planning', function() {
 
     expect(plan).to.eql([{
       cmd: 'add',
-      id: machine1.id
+      id: machine1.id,
+      parent: machine1.id
     }, {
       cmd: 'start',
-      id: machine1.id
+      id: machine1.id,
+      parent: machine1.id
     }, {
       cmd: 'link',
-      id: machine1.id
+      id: machine1.id,
+      parent: machine1.id
     }, {
       cmd: 'add',
-      id: machine2.id
+      id: machine2.id,
+      parent: machine2.id
     }, {
       cmd: 'start',
-      id: machine2.id
+      id: machine2.id,
+      parent: machine2.id
     }, {
       cmd: 'link',
-      id: machine2.id
+      id: machine2.id,
+      parent: machine2.id
     }]);
   });
 
@@ -83,22 +92,28 @@ describe('white sheet planning', function() {
 
     expect(plan).to.eql([{
       cmd: 'add',
-      id: machine1.id
+      id: machine1.id,
+      parent: machine1.id
     }, {
       cmd: 'start',
-      id: machine1.id
+      id: machine1.id,
+      parent: machine1.id
     }, {
       cmd: 'add',
-      id: machine2.id
+      id: machine2.id,
+      parent: machine1.id
     }, {
       cmd: 'start',
-      id: machine2.id
+      id: machine2.id,
+      parent: machine1.id
     }, {
       cmd: 'link',
-      id: machine2.id
+      id: machine2.id,
+      parent: machine1.id
     }, {
       cmd: 'link',
-      id: machine1.id
+      id: machine1.id,
+      parent: machine1.id
     }]);
   });
 
@@ -118,31 +133,40 @@ describe('white sheet planning', function() {
 
     expect(plan).to.eql([{
       cmd: 'add',
-      id: machine1.id
+      id: machine1.id,
+      parent: machine1.id
     }, {
       cmd: 'start',
-      id: machine1.id
+      id: machine1.id,
+      parent: machine1.id
     }, {
       cmd: 'add',
-      id: machine2.id
+      id: machine2.id,
+      parent: machine1.id
     }, {
       cmd: 'start',
-      id: machine2.id
+      id: machine2.id,
+      parent: machine1.id
     }, {
       cmd: 'link',
-      id: machine2.id
+      id: machine2.id,
+      parent: machine1.id
     }, {
       cmd: 'add',
-      id: machine3.id
+      id: machine3.id,
+      parent: machine1.id
     }, {
       cmd: 'start',
-      id: machine3.id
+      id: machine3.id,
+      parent: machine1.id
     }, {
       cmd: 'link',
-      id: machine3.id
+      id: machine3.id,
+      parent: machine1.id
     }, {
       cmd: 'link',
-      id: machine1.id
+      id: machine1.id,
+      parent: machine1.id
     }]);
   });
 
@@ -162,31 +186,40 @@ describe('white sheet planning', function() {
 
     expect(plan).to.eql([{
       cmd: 'add',
-      id: machine1.id
+      id: machine1.id,
+      parent: machine1.id
     }, {
       cmd: 'start',
-      id: machine1.id
+      id: machine1.id,
+      parent: machine1.id
     }, {
       cmd: 'add',
-      id: machine2.id
+      id: machine2.id,
+      parent: machine1.id
     }, {
       cmd: 'start',
-      id: machine2.id
+      id: machine2.id,
+      parent: machine1.id
     }, {
       cmd: 'add',
-      id: machine3.id
+      id: machine3.id,
+      parent: machine2.id
     }, {
       cmd: 'start',
-      id: machine3.id
+      id: machine3.id,
+      parent: machine2.id
     }, {
       cmd: 'link',
-      id: machine3.id
+      id: machine3.id,
+      parent: machine2.id
     }, {
       cmd: 'link',
-      id: machine2.id
+      id: machine2.id,
+      parent: machine1.id
     }, {
       cmd: 'link',
-      id: machine1.id
+      id: machine1.id,
+      parent: machine1.id
     }]);
   });
 });

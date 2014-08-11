@@ -37,28 +37,36 @@ describe('dirty sheet planning with safe mode', function() {
 
     expected = [{
       cmd: 'unlink',
-      id: machine2Origin.id
+      id: machine2Origin.id,
+      parent: machine1.id
     }, {
       cmd: 'unlink',
-      id: machine3.id
+      id: machine3.id,
+      parent: machine2Origin.id
     }, {
       cmd: 'stop',
-      id: machine3.id
+      id: machine3.id,
+      parent: machine2Origin.id
     }, {
       cmd: 'remove',
-      id: machine3.id
+      id: machine3.id,
+      parent: machine2Origin.id
     }, {
       cmd: 'add',
-      id: machine4.id
+      id: machine4.id,
+      parent: machine2Origin.id
     }, {
       cmd: 'start',
-      id: machine4.id
+      id: machine4.id,
+      parent: machine2Origin.id
     }, {
       cmd: 'link',
-      id: machine4.id
+      id: machine4.id,
+      parent: machine2Origin.id
     }, {
       cmd: 'link',
-      id: machine2Dest.id
+      id: machine2Dest.id,
+      parent: machine1.id
     }];
 
     expect(plan).to.eql(expected);
@@ -96,34 +104,44 @@ describe('dirty sheet planning with safe mode', function() {
 
     expected = [{
       cmd: 'unlink',
-      id: machine2Dest.id
+      id: machine2Dest.id,
+      parent: machine0.id
     }, {
       cmd: 'unlink',
-      id: machine1Orig.id
+      id: machine1Orig.id,
+      parent: machine0.id
     }, {
       cmd: 'unlink',
-      id: machine3Orig.id
+      id: machine3Orig.id,
+      parent: machine1Orig.id
     }, {
       cmd: 'stop',
-      id: machine3Orig.id
+      id: machine3Orig.id,
+      parent: machine1Orig.id
     }, {
       cmd: 'remove',
-      id: machine3Orig.id
+      id: machine3Orig.id,
+      parent: machine1Orig.id
     }, {
       cmd: 'link',
-      id: machine1Orig.id
+      id: machine1Orig.id,
+      parent: machine0.id
     }, {
       cmd: 'add',
-      id: machine3Orig.id
+      id: machine3Orig.id,
+      parent: machine2Orig.id
     }, {
       cmd: 'start',
-      id: machine3Orig.id
+      id: machine3Orig.id,
+      parent: machine2Orig.id
     }, {
       cmd: 'link',
-      id: machine3Orig.id
+      id: machine3Orig.id,
+      parent: machine2Orig.id
     }, {
       cmd: 'link',
-      id: machine2Dest.id
+      id: machine2Dest.id,
+      parent: machine0.id
     }];
 
     expect(plan).to.eql(expected);

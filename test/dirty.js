@@ -30,13 +30,16 @@ describe('dirty sheet planning', function() {
 
     expect(plan).to.eql([{
       cmd: 'add',
-      id: machine2.id
+      id: machine2.id,
+      parent: machine1.id
     }, {
       cmd: 'start',
-      id: machine2.id
+      id: machine2.id,
+      parent: machine1.id
     }, {
       cmd: 'link',
-      id: machine2.id
+      id: machine2.id,
+      parent: machine1.id
     }]);
   });
 
@@ -56,22 +59,28 @@ describe('dirty sheet planning', function() {
 
     expect(plan).to.eql([{
       cmd: 'add',
-      id: machine2.id
+      id: machine2.id,
+      parent: machine2.id
     }, {
       cmd: 'start',
-      id: machine2.id
+      id: machine2.id,
+      parent: machine2.id
     }, {
       cmd: 'link',
-      id: machine2.id
+      id: machine2.id,
+      parent: machine2.id
     }, {
       cmd: 'unlink',
-      id: machine1.id
+      id: machine1.id,
+      parent: machine1.id
     }, {
       cmd: 'stop',
-      id: machine1.id
+      id: machine1.id,
+      parent: machine1.id
     }, {
       cmd: 'remove',
-      id: machine1.id
+      id: machine1.id,
+      parent: machine1.id
     }]);
   });
 
@@ -99,40 +108,52 @@ describe('dirty sheet planning', function() {
 
     expect(plan).to.eql([{
       cmd: 'unlink',
-      id: machine2.id
+      id: machine2.id,
+      parent: machine1Origin.id
     }, {
       cmd: 'unlink',
-      id: machine3.id
+      id: machine3.id,
+      parent: machine2.id
     }, {
       cmd: 'stop',
-      id: machine3.id
+      id: machine3.id,
+      parent: machine2.id
     }, {
       cmd: 'remove',
-      id: machine3.id
+      id: machine3.id,
+      parent: machine2.id
     }, {
       cmd: 'stop',
-      id: machine2.id
+      id: machine2.id,
+      parent: machine1Origin.id
     }, {
       cmd: 'remove',
-      id: machine2.id
+      id: machine2.id,
+      parent: machine1Origin.id
     }, {
       cmd: 'add',
-      id: machine4.id
+      id: machine4.id,
+      parent: machine1Origin.id
     }, {
       cmd: 'start',
-      id: machine4.id
+      id: machine4.id,
+      parent: machine1Origin.id
     }, {
       cmd: 'add',
-      id: machine5.id
+      id: machine5.id,
+      parent: machine4.id
     }, {
       cmd: 'start',
-      id: machine5.id
+      id: machine5.id,
+      parent: machine4.id
     }, {
       cmd: 'link',
-      id: machine5.id
+      id: machine5.id,
+      parent: machine4.id
     }, {
       cmd: 'link',
-      id: machine4.id
+      id: machine4.id,
+      parent: machine1Origin.id
     }]);
   });
 
@@ -164,22 +185,28 @@ describe('dirty sheet planning', function() {
 
    expect(plan).to.eql([{
      cmd: 'unlink',
-     id: machine3Orig.id
+     id: machine3Orig.id,
+     parent: machine1Orig.id
    }, {
      cmd: 'stop',
-     id: machine3Orig.id
+     id: machine3Orig.id,
+     parent: machine1Orig.id
    }, {
      cmd: 'remove',
-     id: machine3Orig.id
+     id: machine3Orig.id,
+     parent: machine1Orig.id
    }, {
      cmd: 'add',
-     id: machine3Orig.id
+     id: machine3Orig.id,
+     parent: machine2Orig.id
    }, {
      cmd: 'start',
-     id: machine3Orig.id
+     id: machine3Orig.id,
+     parent: machine2Orig.id
    }, {
      cmd: 'link',
-     id: machine3Orig.id
+     id: machine3Orig.id,
+     parent: machine2Orig.id
    }]);
   });
 
@@ -211,22 +238,28 @@ describe('dirty sheet planning', function() {
 
    expect(plan).to.eql([{
      cmd: 'unlink',
-     id: machine3Orig.id
+     id: machine3Orig.id,
+     parent: machine2Orig.id
    }, {
      cmd: 'stop',
-     id: machine3Orig.id
+     id: machine3Orig.id,
+     parent: machine2Orig.id
    }, {
      cmd: 'remove',
-     id: machine3Orig.id
+     id: machine3Orig.id,
+     parent: machine2Orig.id
    }, {
      cmd: 'add',
-     id: machine3Orig.id
+     id: machine3Orig.id,
+     parent: machine1Orig.id
    }, {
      cmd: 'start',
-     id: machine3Orig.id
+     id: machine3Orig.id,
+     parent: machine1Orig.id
    }, {
      cmd: 'link',
-     id: machine3Orig.id
+     id: machine3Orig.id,
+     parent: machine1Orig.id
    }]);
   });
 
@@ -262,40 +295,52 @@ describe('dirty sheet planning', function() {
 
    expect(plan).to.eql([{
      cmd: 'unlink',
-     id: machine4.id
+     id: machine4.id,
+     parent: machine2Orig.id
    }, {
      cmd: 'stop',
-     id: machine4.id
+     id: machine4.id,
+     parent: machine2Orig.id
    }, {
      cmd: 'remove',
-     id: machine4.id
+     id: machine4.id,
+     parent: machine2Orig.id
    }, {
      cmd: 'add',
-     id: machine6.id
+     id: machine6.id,
+     parent: machine2Orig.id
    }, {
      cmd: 'start',
-     id: machine6.id
+     id: machine6.id,
+     parent: machine2Orig.id
    }, {
      cmd: 'link',
-     id: machine6.id
+     id: machine6.id,
+     parent: machine2Orig.id
    }, {
      cmd: 'unlink',
-     id: machine5.id
+     id: machine5.id,
+     parent: machine3Orig.id
    }, {
      cmd: 'stop',
-     id: machine5.id
+     id: machine5.id,
+     parent: machine3Orig.id
    }, {
      cmd: 'remove',
-     id: machine5.id
+     id: machine5.id,
+     parent: machine3Orig.id
    }, {
      cmd: 'add',
-     id: machine7.id
+     id: machine7.id,
+     parent: machine3Orig.id
    }, {
      cmd: 'start',
-     id: machine7.id
+     id: machine7.id,
+     parent: machine3Orig.id
    }, {
      cmd: 'link',
-     id: machine7.id
+     id: machine7.id,
+     parent: machine3Orig.id
    }]);
   });
 
@@ -322,22 +367,28 @@ describe('dirty sheet planning', function() {
 
     expect(plan).to.eql([{
       cmd: 'unlink',
-      id: machine3.id
+      id: machine3.id,
+      parent: machine2Origin.id
     }, {
       cmd: 'stop',
-      id: machine3.id
+      id: machine3.id,
+      parent: machine2Origin.id
     }, {
       cmd: 'remove',
-      id: machine3.id
+      id: machine3.id,
+      parent: machine2Origin.id
     }, {
       cmd: 'add',
-      id: machine4.id
+      id: machine4.id,
+      parent: machine2Origin.id
     }, {
       cmd: 'start',
-      id: machine4.id
+      id: machine4.id,
+      parent: machine2Origin.id
     }, {
       cmd: 'link',
-      id: machine4.id
+      id: machine4.id,
+      parent: machine2Origin.id
     }]);
   });
 });
