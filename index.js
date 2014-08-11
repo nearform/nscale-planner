@@ -1,5 +1,7 @@
 'use strict';
 
+/** @module main */
+
 var TaskPlanner            = require('taskplanner');
 var _                      = require('lodash');
 var assert                 = require('assert');
@@ -8,11 +10,25 @@ var linkFilter             = require('./lib/linkUnlinkFilter');
 var generateCommands       = require('./lib/generateCommands');
 var generateConfigureTasks = require('./lib/generateConfigureTasks');
 var generateDetachTasks    = require('./lib/generateDetachTasks');
+
+/**
+ * Defaults for the planner() function.
+ *
+ * See the code code for the actual values
+ *
+ */
 var defaults               = {
   mode: 'quick',
   noLinkUnlinkRemove: false
 };
 
+/**
+ * Creates a new planner
+ *
+ * @param {object} origin - The origin system definition
+ * @param {object} dest - The destination system definition
+ * @param {object} opts - The options
+ */
 function planner(origin, dest, opts)  {
 
   var tasks   = new TaskPlanner();
