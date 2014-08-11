@@ -48,12 +48,15 @@ console.log(planner(origin, dest))
 //[{
 //   cmd: "add"
 // , id: machine.id
+// , parent: machine1.id
 //}, {
 //   cmd: "start"
 // , id: machine.id
+// , parent: machine1.id
 //}, {
 //   cmd: "link"
 // , id: machine.id
+// , parent: machine1.id
 //}]
 
 ```
@@ -64,6 +67,9 @@ docker instances.
 See examples/dirty.js for an example that spin up an AMI with a new
 docker instance within an ELB.
 docker instances.
+
+For the sake of simplicity, each commands includes the parent id.
+This is where the command will be executed most of the time.
 
 ### Safe deployment
 
