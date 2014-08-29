@@ -13,6 +13,14 @@
   ],
   "author": "Matteo Collina <matteo.collina@nearform.com>",
   "license": "Artistic License 2.0",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/nearform/nscale-planner.git"
+  },
+  "bugs": {
+    "url": "https://github.com/nearform/nscale-planner/issues"
+  },
+  "homepage": "https://github.com/nearform/nscale-planner",
   "devDependencies": {
     "must": "~0.11.0",
     "mocha": "~1.21.3",
