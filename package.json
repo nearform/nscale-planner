@@ -3,7 +3,6 @@
   "version": "0.0.6",
   "description": "Plan your deployements, easily",
   "main": "index.js",
-  "private": true,
   "scripts": {
     "jshint": "jshint --exclude node_modules index.js lib test",
     "test": "mocha --bail test/* 2>&1"
@@ -13,7 +12,7 @@
     "test"
   ],
   "author": "Matteo Collina <matteo.collina@nearform.com>",
-  "license": "private",
+  "license": "Artistic License 2.0",
   "devDependencies": {
     "must": "~0.11.0",
     "mocha": "~1.21.3",

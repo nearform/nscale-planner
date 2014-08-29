@@ -82,3 +82,7 @@ instance from the ELB. Usage:
 planner(origin, dest, { mode: 'safe' })
 ```
 
+## License
+
+Artistic License 2.0.
+
