@@ -2,6 +2,8 @@ nfd-planner
 ===========
 
 Plan your deployments, easily!
+This module is not though of being used _alone_, but rather it is a
+internal dependency of [nscale](http://github.com/nearform/nscale).
 
 ```js
 
