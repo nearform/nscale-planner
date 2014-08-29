@@ -1,6 +1,6 @@
 {
   "name": "nfd-planner",
-  "version": "0.0.6",
+  "version": "0.1.0",
   "description": "Plan your deployements, easily",
   "main": "index.js",
   "scripts": {
