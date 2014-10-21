@@ -1,5 +1,5 @@
-nfd-planner
-===========
+nscale-planner&nbsp;&nbsp;&nbsp;[![Build Status](https://travis-ci.org/nearform/nscale-planner.png)](https://travis-ci.org/nearform/nscale-planner)
+=============
 
 Plan your deployments, easily!
 This module is not though of being used _alone_, but rather it is a
